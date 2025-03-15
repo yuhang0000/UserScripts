@@ -1118,21 +1118,25 @@
         observer.observe(feed, {childList: true,});
 
         //判断是否到达底部
+        function check2bottomplus(){
+            let contents_end = bilicomment.shadowRoot.querySelector("div[id='end']");//是否到底
+            if(contents_end != null){
+                let bottombar = contents_end.querySelector("div.bottombar");
+                bottombar.setAttribute('style',`padding-bottom: 100px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
+            }
+        }
         const check2bottom = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.type === 'childList') {
                     mutation.addedNodes.forEach((addedNode) => {
-                        //console.log('让我看看');
-                        let contents_end = bilicomment.shadowRoot.querySelector("div[id='end']");//是否到底
-                        if(contents_end != null){
-                            let bottombar = contents_end.querySelector("div.bottombar");
-                            bottombar.setAttribute('style',`padding-bottom: 100px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
-                        }
+                        console.log('让我看看');
+                        check2bottomplus();
                     });
                 }
             });
         });
         check2bottom.observe(bilicomment.shadowRoot, {childList: true,});
+        check2bottomplus();
 
         findcomment(feed);
     }

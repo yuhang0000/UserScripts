@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         B站评论区修复
+// @name         B站評論區修復
 // @namespace    http://tampermonkey.net/
 // @version      v1.0_2025-3-16
 // @description  修复B站视频底下评论区 css 样式表，按 ctrl + shift + F8 来激活操作。

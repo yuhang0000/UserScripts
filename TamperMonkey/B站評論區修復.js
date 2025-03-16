@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         B站評論區修復
 // @namespace    http://tampermonkey.net/
-// @version      v1.2_2025-3-16
-// @description  修复B站视频底下评论区 css 样式表，按 ctrl + shift + F8 来激活操作。
+// @version      v1.3_2025-3-16
+// @description  修复B站视频底下评论区 css 样式表。
 // @author       欲行肆灵
 // @match        https://www.bilibili.com/*
 // @match        https://t.bilibili.com/*
@@ -398,6 +398,37 @@
         let count = navbar.querySelector("div[id='count']");
         count.setAttribute('style',`margin: 0 30px 0 6px;font-size: var(--bili-comments-font-size-count, 13px);font-weight: 400;color: var(--text3);`);
         let sort_actions = navbar.querySelector("div[id='sort-actions']");
+        let more = navbar.querySelector("div[id='more']"); //开启评论精选&关闭评论
+        if(more != null){
+            more.setAttribute('style',`margin-left: auto;width: 24px;height: 24px;position: relative;`);
+            let button = more.querySelector("button");
+            button.setAttribute('style',`width: 24px;height: 24px;text-align: center;padding: 0px;outline: none;border: none;background: transparent;font-size: 13px;color: var(--text3);
+            display: inline-flex;align-items: center;cursor: pointer;justify-content: end;`);
+            let bili_icon = more.querySelector("bili-icon");
+            bili_icon.setAttribute('style',`display: inline-flex;align-items: center;`);
+            let bili_comment_menu = more.querySelector("bili-comment-menu");
+            bili_comment_menu.setAttribute('style',`--bili-comment-menu-display: none;--bili-comment-menu-position: absolute;--bili-comment-menu-top: 20px;--bili-comment-menu-right: 0;`);
+            let options = bili_comment_menu.shadowRoot.querySelector("#options");
+            options.setAttribute('style',`display: var(--bili-comment-menu-display);position: var(--bili-comment-menu-position);top: var(--bili-comment-menu-top);
+            right: var(--bili-comment-menu-right);margin: 0;padding: 0;z-index: 10;width: 120px;list-style: none;border-radius: 4px;font-size: 14px;color: var(--text2);
+            background-color: var(--bg1_float);box-shadow: 0 0 5px #0003;overflow: hidden;`);
+            let optionsss = options.querySelectorAll("li");
+            for(let optionss of optionsss){
+                optionss.setAttribute('style',`box-sizing: border-box;width: 100%;display: flex;align-items: center;height: 36px;padding: 0px 15px;cursor: pointer;user-select: none;`);
+            }
+            button.addEventListener("mouseover",function(){
+                button.style.color = 'var(--brand_blue)';
+            });
+            button.addEventListener("mouseout",function(){
+                button.style.color = 'var(--text3)';
+            });
+            button.addEventListener("click",function(){
+                bili_comment_menu.setAttribute('style',`--bili-comment-menu-display: block;--bili-comment-menu-position: absolute;--bili-comment-menu-top: 20px;--bili-comment-menu-right: 0;`);
+            });
+            bili_comment_menu.addEventListener("mouseout",function(){
+                bili_comment_menu.setAttribute('style',`--bili-comment-menu-display: none;--bili-comment-menu-position: absolute;--bili-comment-menu-top: 20px;--bili-comment-menu-right: 0;`);
+            });
+        }
         let sort_div = navbar.querySelector("div.sort-div");
 
         function textboxdisable(){

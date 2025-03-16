@@ -5,6 +5,7 @@
 // @description  修复B站视频底下评论区 css 样式表，按 ctrl + shift + F8 来激活操作。
 // @author       欲行肆灵
 // @match        https://www.bilibili.com/*
+// @match        https://t.bilibili.com/*
 // @grant        none
 // @license      GPLv3
 // @icon         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAA7EAAAOxAGVKw4bAAACnklEQVRYR+2XX0hTURzHv9edXVuNNaFhm+CLiBXh8qXaUGRBD+YCX8oSwerm34cG+RKxMGlILxMEwYxuTVCazxV7S8Q0eskUscboIWOzWpDWck5n9rDuzXO3dbu4raA+cGHn+/ve8/vew93ZGfBXolIRNPd40P/kAzrcXmi0OqlFFo1Whw63F/2TYTT3eKBSEaklPZV1TRia3xQv58ikohAarQ7OkUlqjsq6JqkNAFKnystTUePSCis6B31wt9YgGvlM1aRotDp0DvpQWmGl9DQrwEgFAABRs7jiGUuaJDA9BXfbCUS/LFO6QLrmgekp3DxnQ3x9jdKRLgDw68lShVDq/8HPAETNwlbfBkvtWRSVHsSOndotvu2zuhJBMDCHp4/uY2z0lrAaiQAFhUW4PPAQxfsOUTdli4VXL9Dbbsen90EGRM2ia/RZzpoLLPhn0F1/hMB2ujXnzQGguMwM26kWAou9gSrMTvjAOzkshRcpfbvoDUZwLh7lVTWiZrE3MOBnYiBqVhQd1aaMNxfQG4zoGw+J4/hajFDNAWStOZA8N2HzU+5OuUQ+QHlVDTgXDwDgnRxmJ3wSB41CP4Oh+U1KaTpA74594yHoDUYAiSV0VJuouhQ5v6Sf/AoIk0k/p0OhXz5AlpEPsBReFJ9k+eM7STUZhX75AHevXQTn4vFtYwP3ulqk5SQU+uVfwkyj+CXMMv8DEMTX16jfA73BmLRnZ4rde/ZS49WVCMGb+ecoMR8VxQs37oB3cr/zFVJEQWERznffprRgYI7B8cZLaLzaRxVyxXCPgwFh8xNHsjKztJ5V3vpncb3+8B86lPpn0NtWmziUChA1i2Nn2mE92QhTyX7ka3ZtuWX7xKJfEXr9ElMPhvHYO5DqT8q/yXdT6gC1Lkc+ZAAAAABJRU5ErkJggg==
@@ -821,7 +822,7 @@
                 }
                 let fans = bili_comment_user_medal.shadowRoot.querySelector("div[id='fans']");
                 if(fans != null){
-                    contractor.setAttribute('style',contractor.getAttribute('style') +
+                    fans.setAttribute('style',fans.getAttribute('style') +
                     `display: flex;align-items: center;height: 14px;padding-left: 5px;border-width: 0.5px;border-style: solid;border-radius: 10px;margin-left: 5px;`);
                     let name = fans.querySelector("div[id='name']");
                     name.setAttribute('style',name.getAttribute('style') + `display: flex;justify-content: center;align-items: center;position: relative;height: 100%;margin-right: 4px;`);
@@ -1135,7 +1136,7 @@
             mutations.forEach((mutation) => {
                 if (mutation.type === 'childList') {
                     mutation.addedNodes.forEach((addedNode) => {
-                        console.log('让我看看');
+                        //console.log('让我看看');
                         check2bottomplus();
                     });
                 }

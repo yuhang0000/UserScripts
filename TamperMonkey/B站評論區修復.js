@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站評論區修復
 // @namespace    http://tampermonkey.net/
-// @version      v1.1_2025-3-16
+// @version      v1.2_2025-3-16
 // @description  修复B站视频底下评论区 css 样式表，按 ctrl + shift + F8 来激活操作。
 // @author       欲行肆灵
 // @match        https://www.bilibili.com/*
@@ -13,8 +13,14 @@
 
 (function() {
 
+    //总开关
     window.debug_comment = false;
     window.debug_comment = true;
+    //自动展开评论
+    //window.biliautoclickreadmore = true;
+    //笔记图片默认展示为原图
+    //window.bilifiximg = true;
+
     var sethidearray = new Array();
 
     //这是延时
@@ -393,7 +399,8 @@
         count.setAttribute('style',`margin: 0 30px 0 6px;font-size: var(--bili-comments-font-size-count, 13px);font-weight: 400;color: var(--text3);`);
         let sort_actions = navbar.querySelector("div[id='sort-actions']");
         let sort_div = navbar.querySelector("div.sort-div");
-        if(sort_div == null){ //如果是null, 则说明评论区以关闭
+
+        function textboxdisable(){
             let commentbox = header.shadowRoot.querySelector("div[id='commentbox']");
             commentbox.setAttribute('style',`flex-shrink: 0;transition: height 0.2s;height: var(--bili-comments-commentbox-height, auto);`);
             let disabled_commentbox = commentbox.querySelector("div[id='disabled-commentbox']");
@@ -405,6 +412,10 @@
             let edit = commentbox.querySelector("div[id='edit']");
             edit.setAttribute('style',`flex: 1 1 0%;height: 100%;border-radius: 6px;font-size: 12px;color: var(--text3);background-color: var(--bg3);display: flex;align-items: center;
             justify-content: center;`);
+        }
+
+        if(sort_div == null){ //如果是null, 则说明评论区以关闭
+            textboxdisable();
             let contents = bilicomment.shadowRoot.querySelector("div[id='contents']");
             contents.setAttribute('style',`display: none;padding-top: 14px;position: relative;`);
             let contents_end = bilicomment.shadowRoot.querySelector("div[id='end']"); //是否到底
@@ -458,51 +469,56 @@
         let commentbox = header.shadowRoot.querySelector("div[id='commentbox']");
         commentbox.setAttribute('style',`flex-shrink: 0;transition: height 0.2s;height: var(--bili-comments-commentbox-height, auto);`);
         let bili_comment_box = header.shadowRoot.querySelector("bili-comment-box");
-        bili_comment_box.setAttribute('style',`display: flex;`);
-        fixtextbox(bili_comment_box);
-        /*//隐藏@谁
-        fixtextbox(bili_comment_box).then((hideatwho) => {
-            const obcheckatwho = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if (mutation.type === 'attributes') {
-                        if(hideatwho.style.display != 'flex'){
-                            hideatwho.style.display = 'none';
+        if(bili_comment_box != null){ //如果文本框不存在, 说明你没有权限发送评论
+            bili_comment_box.setAttribute('style',`display: flex;`);
+            fixtextbox(bili_comment_box);
+            /*//隐藏@谁
+            fixtextbox(bili_comment_box).then((hideatwho) => {
+                const obcheckatwho = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.type === 'attributes') {
+                            if(hideatwho.style.display != 'flex'){
+                                hideatwho.style.display = 'none';
+                            }
                         }
+                    });
+                });
+                obcheckatwho.observe(hideatwho, {attributes: true,attributeFilter: ['style'],});
+            });*/
+
+            async function checkcommentbox(){
+                try{
+                    bili_comment_box = header.shadowRoot.querySelector("bili-comment-box");
+                    bili_comment_box.setAttribute('style',`display: flex;`);
+                    fixtextbox(bili_comment_box,false);
+                }
+                catch (ex){
+                    await delay(1000);
+                    //console.log('错误: \n' + ex.stack);
+                    checkcommentbox();
+                }
+            }
+
+            //监听 commentbox 位置变化
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'childList') {
+                        mutation.addedNodes.forEach((addedNode) => {
+                            checkcommentbox();
+                        });
+
+                        mutation.removedNodes.forEach((removedNode) => {
+                            checkcommentbox();
+                        });
                     }
                 });
             });
-            obcheckatwho.observe(hideatwho, {attributes: true,attributeFilter: ['style'],});
-        });*/
-
-        async function checkcommentbox(){
-            try{
-                bili_comment_box = header.shadowRoot.querySelector("bili-comment-box");
-                bili_comment_box.setAttribute('style',`display: flex;`);
-                fixtextbox(bili_comment_box,false);
-            }
-            catch (ex){
-                await delay(1000);
-                //console.log('错误: \n' + ex.stack);
-                checkcommentbox();
-            }
+            observer.observe(commentbox, {childList: true,});
         }
-
-        //监听 commentbox 位置变化
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.type === 'childList') {
-                    mutation.addedNodes.forEach((addedNode) => {
-                        checkcommentbox();
-                    });
-
-                    mutation.removedNodes.forEach((removedNode) => {
-                        checkcommentbox();
-                    });
-                }
-            });
-        });
-        observer.observe(commentbox, {childList: true,});
-
+        else{
+            textboxdisable();
+            console.log('当前评论区无法发送评论');
+        }
         console.log('评论修复完成!');
     }
 
@@ -1150,7 +1166,7 @@
         });
         observer.observe(feed, {childList: true,});
 
-        //判断是否到达底部
+        //判断是否到达底部 判断评论区是否被重置
         function check2bottomplus(){
             let contents_end = bilicomment.shadowRoot.querySelector("div[id='end']");//是否到底
             if(contents_end != null){
@@ -1158,12 +1174,29 @@
                 bottombar.setAttribute('style',`padding-bottom: 100px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
             }
         }
+        let removedDOMaction = false;
         const check2bottom = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.type === 'childList') {
                     mutation.addedNodes.forEach((addedNode) => {
                         //console.log('让我看看');
                         check2bottomplus();
+                    });
+                    mutation.removedNodes.forEach((removedNode) => {
+                        //console.log(removedNode);
+                        //console.log(removedNode.nodeName);
+                        //console.log(removedNode.nodeValue);
+                        //if(removedNode.getAttribute('id') == 'contents'){ //如果评论列表没了, 说明整个评论区被充值了
+                        if(removedNode.nodeName == '#comment' && removedDOMaction == false){
+                            removedDOMaction = true;
+                            for(let mainobserverss of mainobservers){ //清除全部监听器
+                                mainobserverss.disconnect();
+                            }
+                            observer.disconnect();
+                            check2bottom.disconnect();
+                            bilicomment.setAttribute('fixed','false');
+                            console.log('评论区被重置!');
+                        }
                     });
                 }
             });

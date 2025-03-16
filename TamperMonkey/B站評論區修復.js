@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站評論區修復
 // @namespace    http://tampermonkey.net/
-// @version      v1.3_2025-3-16
+// @version      v1.4_2025-3-17
 // @description  修复B站视频底下评论区 css 样式表。
 // @author       欲行肆灵
 // @match        https://www.bilibili.com/*
@@ -390,7 +390,7 @@
             notice.remove();
         }
         let navbar = header.shadowRoot.querySelector("div[id='navbar']");
-        navbar.setAttribute('style',`display: flex;align-items: center;height: 28px;margin-bottom: 22px;`);
+        navbar.setAttribute('style',`display: flex;align-items: center;height: 28px;margin-bottom: 22px;margin-top: 10px;`);
         let title = navbar.querySelector("div[id='title']");
         title.setAttribute('style',`display: var(--bili-comments-title-display, flex);align-items: center;`);
         let h2 = navbar.querySelector("h2");
@@ -451,7 +451,12 @@
             contents.setAttribute('style',`display: none;padding-top: 14px;position: relative;`);
             let contents_end = bilicomment.shadowRoot.querySelector("div[id='end']"); //是否到底
             let bottombar = contents_end.querySelector("div.bottombar");
-            bottombar.setAttribute('style',`padding-bottom: 100px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
+            if(contents_end.className == 'limit'){ //动态首页和个人主页, 这两个地方底部边距矮一点
+                bottombar.setAttribute('style',`padding-bottom: 20px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
+            }
+            else{
+                bottombar.setAttribute('style',`padding-bottom: 100px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
+            }
             console.log('当前评论区已关闭');
             return 'disable';
         }
@@ -1202,7 +1207,12 @@
             let contents_end = bilicomment.shadowRoot.querySelector("div[id='end']");//是否到底
             if(contents_end != null){
                 let bottombar = contents_end.querySelector("div.bottombar");
-                bottombar.setAttribute('style',`padding-bottom: 100px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
+                if(contents_end.className == 'limit'){ //动态首页和个人主页, 这两个地方底部边距矮一点
+                    bottombar.setAttribute('style',`padding-bottom: 20px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
+                }
+                else{
+                    bottombar.setAttribute('style',`padding-bottom: 100px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
+                }
             }
         }
         let removedDOMaction = false;

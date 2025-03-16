@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站評論區修復
 // @namespace    http://tampermonkey.net/
-// @version      v1.0_2025-3-16
+// @version      v1.1_2025-3-16
 // @description  修复B站视频底下评论区 css 样式表，按 ctrl + shift + F8 来激活操作。
 // @author       欲行肆灵
 // @match        https://www.bilibili.com/*
@@ -74,13 +74,19 @@
                 const layerss = bili_avatar.shadowRoot.querySelectorAll('div.layers');
                 //console.log(layerss.length);
                 layernum = layerss.length;
+                if(layernum < 1){
+                    //console.log('等待');
+                    await delay(10);
+                    fixusericon(div,comment);
+                    return;
+                }
                 if(canvas.getAttribute('style').indexOf('--avatar-canvas-width:') != -1){
                     iconsize = canvas.getAttribute('style')
                     iconsize = iconsize.substring(iconsize.indexOf('--avatar-canvas-width:') + 23,iconsize.indexOf('px;') + 2)
                 }
                 canvas.setAttribute('style', `width: `+ iconsize + `;height: `+ iconsize + `;position: absolute;left: 50%;top: 50%;transform: translate(-50%, -50%);
                 pointer-events: none;`);
-                for(let layers of layerss){
+                for(let layers of layerss){ //头饰
                     layers.setAttribute('style', `position: absolute;left: 0;right: 0;top: 0;bottom: 0;`);
                     const layer_centers = layers.querySelectorAll('div.layer.center');
                     for(let layer_center of layer_centers){
@@ -96,7 +102,7 @@
                             source.setAttribute('style', `width: 100%;height: 100%;`);
                         }
                     }
-                    let layer_bigvip = layers.querySelector('div.layer');
+                    let layer_bigvip = layers.querySelector('div.layer'); //大会员
                     if(layer_bigvip != null){
                         layer_bigvip.setAttribute('style',layer_bigvip.getAttribute('style') + `position: absolute;isolation: isolate;overflow: hidden;`);
                         let layer_res = layer_bigvip.querySelector('div.layer-res');
@@ -133,7 +139,7 @@
             canvas.setAttribute('style', `width: `+ iconsize + `;height: `+ iconsize + `;position: absolute;left: 50%;top: 50%;transform: translate(-50%, -50%);
                 pointer-events: none;`);
             //canvas.setAttribute('style', canvas.getAttribute('style') + `;left: 50%;top: 50%;transform: translate(-50%, -50%);pointer-events: none;`);
-            for(let layers of layerss){
+            for(let layers of layerss){ //头饰
                 layers.setAttribute('style', `position: absolute;left: 0;right: 0;top: 0;bottom: 0;`);
                 const layer_centers = layers.querySelectorAll('div.layer.center');
                 for(let layer_center of layer_centers){
@@ -147,7 +153,7 @@
                         source.setAttribute('style', `width: 48px; height: 48px; opacity: 1; border-radius: 50%;`);
                     }
                 }
-                let layer_bigvip = layers.querySelector('div.layer');
+                let layer_bigvip = layers.querySelector('div.layer'); //大会员
                 if(layer_bigvip != null){
                     layer_bigvip.setAttribute('style',layer_bigvip.getAttribute('style') + `position: absolute;isolation: isolate;overflow: hidden;`);
                     let layer_res = layer_bigvip.querySelector('div.layer-res');
@@ -387,13 +393,33 @@
         count.setAttribute('style',`margin: 0 30px 0 6px;font-size: var(--bili-comments-font-size-count, 13px);font-weight: 400;color: var(--text3);`);
         let sort_actions = navbar.querySelector("div[id='sort-actions']");
         let sort_div = navbar.querySelector("div.sort-div");
+        if(sort_div == null){ //如果是null, 则说明评论区以关闭
+            let commentbox = header.shadowRoot.querySelector("div[id='commentbox']");
+            commentbox.setAttribute('style',`flex-shrink: 0;transition: height 0.2s;height: var(--bili-comments-commentbox-height, auto);`);
+            let disabled_commentbox = commentbox.querySelector("div[id='disabled-commentbox']");
+            disabled_commentbox.setAttribute('style',`display: flex;height: 50px;`);
+            let user_avatar = commentbox.querySelector("div[id='user-avatar']");
+            user_avatar.setAttribute('style',`flex-shrink: 0;width: 80px;height: 50px;display: flex;justify-content: center;align-items: center;`);
+            let img = commentbox.querySelector("img");
+            img.setAttribute('style',`border-radius: 50%;`);
+            let edit = commentbox.querySelector("div[id='edit']");
+            edit.setAttribute('style',`flex: 1 1 0%;height: 100%;border-radius: 6px;font-size: 12px;color: var(--text3);background-color: var(--bg3);display: flex;align-items: center;
+            justify-content: center;`);
+            let contents = bilicomment.shadowRoot.querySelector("div[id='contents']");
+            contents.setAttribute('style',`display: none;padding-top: 14px;position: relative;`);
+            let contents_end = bilicomment.shadowRoot.querySelector("div[id='end']"); //是否到底
+            let bottombar = contents_end.querySelector("div.bottombar");
+            bottombar.setAttribute('style',`padding-bottom: 100px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
+            console.log('当前评论区已关闭');
+            return 'disable';
+        }
         sort_div.setAttribute('style',`display: inline-block;height: 11px;margin: 0 3px;border-left: solid 1px var(--text3);vertical-align: -2px;`);
         let sort_div_button = navbar.querySelectorAll("bili-text-button");
         /*for(let button of sort_div_button){
             button = button.shadowRoot.querySelector("button");
             button.setAttribute('style',`border: none;background: transparent;cursor: pointer;font: inherit;`);
         }*/
-        if(sort_div_button.length != 0){
+        if(sort_div_button.length != 0){ //最热 | 最新
             function checkhotortime(){
                 if(sort_actions.className.indexOf("hot") != -1){
                     sort_button1.style.color = "var(--text1)";
@@ -1150,13 +1176,19 @@
 
     //修复主函数
     async function runfixbilicomment(bilicomment){
+        let commmentstate;
         async function tryfix(){
+            commmentstate = ''; //记得在每次重试时, 先重置状态
             try{
-                if(fixbilicomment(bilicomment) == false){
+                commmentstate = fixbilicomment(bilicomment);
+                if(commmentstate == false){
                     console.log('重试 [文本框部分]');
                     await delay(1000);
                     tryfix();
                     return;
+                }
+                if(commmentstate != 'disable'){
+                    tryfixlist();
                 }
             }
             catch (ex){
@@ -1182,7 +1214,6 @@
         }
 
         tryfix();
-        tryfixlist();
 
     }
 

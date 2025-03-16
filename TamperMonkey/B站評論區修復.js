@@ -717,12 +717,14 @@
                             if(comment_reply_lists.length == 0 || comment_reply_lists == null){ //如果0人回复就跳过
                                 return;
                             }
-                            let commentbody = comment_reply_lists[comment_reply_lists.length - 1].shadowRoot.querySelector("div[id='body']");
-                            if(commentbody == null){
-                                await delay(10);
-                                //console.log('重试');
-                                imsolazey(div);
-                                return;
+                            for(let comment_reply_list of comment_reply_lists){ //检查回复列表是否全部加载完成
+                                let commentbody = comment_reply_list.shadowRoot.querySelector("div[id='body']");
+                                if(commentbody == null){
+                                    await delay(10);
+                                    //console.log('重试');
+                                    imsolazey(div);
+                                    return;
+                                }
                             }
                             //console.log('好了吗?');
                         }
@@ -789,6 +791,10 @@
                 header.setAttribute('style',`margin-bottom: 4px;`);
             }
             let info = bili_comment_user_info.shadowRoot.querySelector("div[id='info']");
+            /*if(info == null){
+                console.log(commentbody);
+                debugger;
+            }*/
             info.setAttribute('style',`display: inline-flex;align-items: center;`);
             let user_name = info.querySelector("div[id='user-name']");
             user_name.setAttribute('style',`color: var(--bili-comment-user-info-name-color);font-size: var(--bili-comments-font-size-name, 13px);font-weight: 500;`);

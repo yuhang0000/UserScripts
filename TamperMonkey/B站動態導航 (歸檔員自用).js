@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站動態導航 (歸檔員自用)
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.7_2024-12-6
+// @version      v1.8_2025-3-22
 // @description  能導航到指定日期的動態，僅對 https://space.bilibili.com/<你UID>/dynamic/ 作用，僅歸檔員自用。
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -247,13 +247,21 @@
                 let itemtag;
                 if(item != undefined){
                     itemtime = item.querySelector('.bili-dyn-time');
-                    itemtime = itemtime.innerText;
-                    itemtag = item.querySelector('.bili-dyn-tag__text');
-                    //itemtag = itemtag.innerText;
-                    console.log("> " + itemtime + " <");
+                    if(itemtime != null){ //正常获取动态上的时间
+                        itemtime = itemtime.innerText;
+                        itemtag = item.querySelector('.bili-dyn-tag__text');
+                        //itemtag = itemtag.innerText;
+                        console.log("> " + itemtime + " <");
 
-                    //统统转成时间戳
-                    itemtime = timestamp(itemtime,now);
+                        //统统转成时间戳
+                        itemtime = timestamp(itemtime,now);
+                    }
+                    else{ //如果遇到 '1条动态被折叠' 的话
+                        itemtime = item.querySelector('.bili-dyn-item-fold__statement.fs-small');
+                        console.log("%c> " + itemtime.innerText + " <",window.color_red);
+                        itemtime = new Date();
+                        itemtime = itemtime.valueOf();
+                    }
 
                     console.log(itemtime);
                 }

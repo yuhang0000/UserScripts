@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站評論區修復
 // @namespace    http://tampermonkey.net/
-// @version      v1.4_2025-3-17
+// @version      v1.5_2025-3-22
 // @description  修复B站视频底下评论区 css 样式表。
 // @author       欲行肆灵
 // @match        https://www.bilibili.com/*
@@ -902,6 +902,12 @@
                 if(fans != null){
                     fans.setAttribute('style',fans.getAttribute('style') +
                     `display: flex;align-items: center;height: 14px;padding-left: 5px;border-width: 0.5px;border-style: solid;border-radius: 10px;margin-left: 5px;`);
+                    let icon = fans.querySelector("div[id='icon']"); //大航海的 icon
+                    if(icon != null){
+                        icon.setAttribute('style',icon.getAttribute('style') + `display: flex;align-items: center;position: relative;`);
+                        let first_icon = fans.querySelector("img[id='first-icon']");
+                        first_icon.setAttribute('style',`position: absolute;left: -8px;width: 20px;height: 20px;`);
+                    }
                     let name = fans.querySelector("div[id='name']");
                     name.setAttribute('style',name.getAttribute('style') + `display: flex;justify-content: center;align-items: center;position: relative;height: 100%;margin-right: 4px;`);
                     let name_text = fans.querySelector("div[id='name-text']");

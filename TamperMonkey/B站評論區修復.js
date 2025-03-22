@@ -962,60 +962,74 @@
                 line-height: var(--bili-rich-text-line-height, 21px);font-family: var(--bili-font-family);--bili-rich-text-font-size: var(--bili-comments-font-size-content);
                 --bili-rich-text-line-height: var(--bili-comments-line-height-content);`);
             }
-            let contents_temp = bili_rich_text.shadowRoot.querySelector("p[id='contents']");
 
-            //麻烦, 明明已经把文本给更新完了, 破北站还得重新检索 "搜索词" 再创建 <a> 标签. aaa, 不管了, 直接搬出去不给用23333
-            let contents = document.createElement('p');
-            contents.setAttribute('id','contents');
-            contents.innerHTML = contents_temp.innerHTML;
-            contents_temp.setAttribute('fixed','old');
-            contents_temp.style.display = 'none';
-            bili_rich_text.shadowRoot.appendChild(contents);
+            async function fixcontents(){ //如果文本是空白的话, 先等等
+                let contents_temp = bili_rich_text.shadowRoot.querySelector("p[id='contents']");
+                if(contents_temp.hasChildNodes() == true){
+                    //麻烦, 明明已经把文本给更新完了, 破北站还得重新检索 "搜索词" 再创建 <a> 标签. aaa, 不管了, 直接搬出去不给用23333
+                    let contents = document.createElement('p');
+                    contents.setAttribute('id','contents');
+                    contents.innerHTML = contents_temp.innerHTML;
+                    contents_temp.setAttribute('fixed','old');
+                    contents_temp.style.display = 'none';
+                    bili_rich_text.shadowRoot.appendChild(contents);
+                    contents.setAttribute('style',`margin-block-start: 0;margin-block-end: 0;margin-inline-start: 0;margin-inline-end: 0;display: var(--bili-rich-text-display);
+                    white-space: var(--bili-rich-text-white-space);word-break: var(--bili-rich-text-word-break);-webkit-font-smoothing: antialiased;`);
 
-            contents.setAttribute('style',`margin-block-start: 0;margin-block-end: 0;margin-inline-start: 0;margin-inline-end: 0;display: var(--bili-rich-text-display);
-            white-space: var(--bili-rich-text-white-space);word-break: var(--bili-rich-text-word-break);-webkit-font-smoothing: antialiased;`);
-            //链接
-            let bili_rich_links = contents.querySelectorAll("a");
-            if(bili_rich_links != null){
-                for(let bili_rich_link of bili_rich_links){
-                    //let x = '0.65em';
-                    //let y = '1.2em';
-                    /*let xy = bili_rich_link.getAttribute('style') //呃, 那个 icon 大小
-                    if(xy != null){
-                        xy = xy.split(";")
-                        for(let qwertyuiop of xy){
-                            if(qwertyuiop.indexOf('--icon-width: ') != -1){
-                                //console.log(qwertyuiop.substring(qwertyuiop.indexOf(":") + 1,qwertyuiop.length));
-                                x = qwertyuiop.substring(qwertyuiop.indexOf(":") + 1,qwertyuiop.length);
+                    //链接
+                    let bili_rich_links = contents.querySelectorAll("a");
+                    if(bili_rich_links != null){
+                        for(let bili_rich_link of bili_rich_links){
+                            //let x = '0.65em';
+                            //let y = '1.2em';
+                            /*let xy = bili_rich_link.getAttribute('style') //呃, 那个 icon 大小
+                            if(xy != null){
+                                xy = xy.split(";")
+                                for(let qwertyuiop of xy){
+                                    if(qwertyuiop.indexOf('--icon-width: ') != -1){
+                                        //console.log(qwertyuiop.substring(qwertyuiop.indexOf(":") + 1,qwertyuiop.length));
+                                        x = qwertyuiop.substring(qwertyuiop.indexOf(":") + 1,qwertyuiop.length);
+                                    }
+                                    else if(qwertyuiop.indexOf('--icon-height: ') != -1){
+                                        y = qwertyuiop.substring(qwertyuiop.indexOf(":") + 1,qwertyuiop.length);
+                                    }
+
+                                }
+                            }*/
+                            /*if(bili_rich_link.getAttribute('data-type') == 'link'){ //如果是视频连接的话, icon 大小应该是 1.2恶魔???
+                                x = y;
                             }
-                            else if(qwertyuiop.indexOf('--icon-height: ') != -1){
-                                y = qwertyuiop.substring(qwertyuiop.indexOf(":") + 1,qwertyuiop.length);
-                            }
+                            bili_rich_link.setAttribute('style',`display: inline-flex;flex-direction: row-reverse;--icon-width: ` + x + `;--icon-height: ` + y + `;color: var(--bili-rich-text-link-color);
+                            text-decoration: none;background-color: transparent;cursor: pointer;`);*/
 
-                        }
-                    }*/
-                    /*if(bili_rich_link.getAttribute('data-type') == 'link'){ //如果是视频连接的话, icon 大小应该是 1.2恶魔???
-                        x = y;
-                    }
-                    bili_rich_link.setAttribute('style',`display: inline-flex;flex-direction: row-reverse;--icon-width: ` + x + `;--icon-height: ` + y + `;color: var(--bili-rich-text-link-color);
-                    text-decoration: none;background-color: transparent;cursor: pointer;`);*/
-                    bili_rich_link.setAttribute('style',bili_rich_link.getAttribute('style') + `;color: var(--bili-rich-text-link-color);
-                    text-decoration: none;background-color: transparent;cursor: pointer;`);
-                    async function fffff(){
-                        let bili_rich_link_i = bili_rich_link.querySelector("i"); //icon没加载完就先等等
-                        if(bili_rich_link_i != null){
-                            await delay(10);
+                            bili_rich_link.setAttribute('style',bili_rich_link.getAttribute('style') + `;color: var(--bili-rich-text-link-color);
+                            text-decoration: none;background-color: transparent;cursor: pointer;`);
+                            async function fffff(){
+                                let bili_rich_link_i = bili_rich_link.querySelector("i"); //icon没加载完就先等等
+                                if(bili_rich_link_i != null){
+                                    await delay(10);
+                                    fffff();
+                                    return;
+                                }
+                                let bili_rich_link_icon = bili_rich_link.querySelector("bili-icon");
+                                if(bili_rich_link_icon != null){
+                                    bili_rich_link_icon.setAttribute('style',`display: inline-flex;align-items: center;vertical-align: var(--bili-rich-text-icon-vertical-align);`);
+                                }
+                            }
                             fffff();
-                            return;
-                        }
-                        let bili_rich_link_icon = bili_rich_link.querySelector("bili-icon");
-                        if(bili_rich_link_icon != null){
-                            bili_rich_link_icon.setAttribute('style',`display: inline-flex;align-items: center;vertical-align: var(--bili-rich-text-icon-vertical-align);`);
                         }
                     }
-                    fffff();
+                }
+                else{
+                    //console.log('先等等, 文本还是空白的');
+                    await delay(10);
+                    fixcontents();
+                    return;
                 }
             }
+
+            fixcontents();
+
             //笔记那个图标
             let bili_rich_note = commentbody.querySelector("i[id='note']");
             if(bili_rich_note != null){

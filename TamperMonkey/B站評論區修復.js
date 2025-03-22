@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站評論區修復
 // @namespace    http://tampermonkey.net/
-// @version      v1.5_2025-3-22
+// @version      v1.6_2025-3-23
 // @description  修复B站视频底下评论区 css 样式表。
 // @author       欲行肆灵
 // @match        https://www.bilibili.com/*
@@ -1084,7 +1084,7 @@
             likebutton.setAttribute('style',`padding: 0;outline: none;border: none;background: transparent;height: 24px;font-size: 13px;color: var(--text3);display: inline-flex;
             align-items: center;cursor: pointer;`);
             let likebuttonicon = like.querySelector("bili-icon");
-            likebuttonicon.setAttribute('style',`display: inline-flex;align-items: center;`);
+            likebuttonicon.setAttribute('style',likebuttonicon.getAttribute('style') + `display: inline-flex;align-items: center;`);
             let likebuttonnum = like.querySelector("span[id='count']");
             likebuttonnum.setAttribute('style',`margin-left: 5px;display: inline-block;`);
             let dislike = bili_comment_action_buttons_renderer.shadowRoot.querySelector("div[id='dislike']");
@@ -1093,7 +1093,7 @@
             dislikebutton.setAttribute('style',`padding: 0;outline: none;border: none;background: transparent;height: 24px;font-size: 13px;color: var(--text3);display: inline-flex;
             align-items: center;cursor: pointer;`);
             let dislikebuttonicon = dislike.querySelector("bili-icon");
-            dislikebuttonicon.setAttribute('style',`display: inline-flex;align-items: center;`);
+            dislikebuttonicon.setAttribute('style',dislikebuttonicon.getAttribute('style') + `display: inline-flex;align-items: center;`);
             let reply = bili_comment_action_buttons_renderer.shadowRoot.querySelector("div[id='reply']");
             reply.setAttribute('style',`margin-left: 20px;display: flex;align-items: center;position: relative;margin-top: 0px;font-size: 13px;color: var(--text3);`);
             let replybutton = reply.querySelector("button");
@@ -1171,6 +1171,23 @@
             more_options.addEventListener('mouseout', function() {
                 more_options.style.display = "none";
             });
+            //那个点赞点踩还得修改 style 属性值呀
+            function clicklikeordislikeplus(){
+                likebuttonicon.style.display = "inline-flex";
+                likebuttonicon.style.alignItems = "center";
+                dislikebuttonicon.style.display = "inline-flex";
+                dislikebuttonicon.style.alignItems = "center";
+            }
+            async function clicklikeordislike(){
+                await delay(100);
+                clicklikeordislikeplus();
+                await delay(500);
+                clicklikeordislikeplus();
+                await delay(1000);
+                clicklikeordislikeplus();
+            }
+            likebutton.addEventListener('click', clicklikeordislike );
+            dislikebutton.addEventListener('click', clicklikeordislike );
 
             //修完了标记一下
             commentbody.setAttribute('fixed','true');

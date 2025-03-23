@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站評論區修復
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.7_2025-3-24
+// @version      v1.8_2025-3-24
 // @description  修复B站视频底下评论区 css 样式表。
 // @author       欲行肆灵
 // @match        https://www.bilibili.com/*

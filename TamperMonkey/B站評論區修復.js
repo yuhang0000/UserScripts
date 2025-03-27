@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站評論區修復
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.8_2025-3-24
+// @version      v1.9_2025-3-27
 // @description  修复B站视频底下评论区 css 样式表。
 // @author       欲行肆灵
 // @match        https://www.bilibili.com/*
@@ -88,12 +88,21 @@
                     fixusericon(div,comment);
                     return;
                 }
-                if(canvas.getAttribute('style').indexOf('--avatar-canvas-width:') != -1){
-                    iconsize = canvas.getAttribute('style')
-                    iconsize = iconsize.substring(iconsize.indexOf('--avatar-canvas-width:') + 23,iconsize.indexOf('px;') + 2)
+                if(canvas.getAttribute('style').indexOf('--avatar-canvas-width:') != -1){ //获取默认头像框尺寸
+                    iconsize = canvas.getAttribute('style');
+                    //iconsize = iconsize.substring(iconsize.indexOf('--avatar-canvas-width:') + 23,iconsize.indexOf('px;') + 2);
+                    iconsize = iconsize.split(';');
+                    for(let aaa of iconsize){
+                        if(aaa.indexOf('--avatar-canvas-width:') != -1){
+                            iconsize = aaa.substring(aaa.indexOf('--avatar-canvas-width:') + 23,aaa.indexOf('px') + 2);
+                            break;
+                        }
+                    }
                 }
-                canvas.setAttribute('style', `width: `+ iconsize + `;height: `+ iconsize + `;position: absolute;left: 50%;top: 50%;transform: translate(-50%, -50%);
-                pointer-events: none;`);
+                else if(canvas.style.width != null){ //如果已经写死的话，就直接沿用
+                    iconsize = canvas.style.width;
+                }
+                canvas.setAttribute('style', `width: `+ iconsize + `;height: `+ iconsize + `;position: absolute;left: 50%;top: 50%;transform: translate(-50%, -50%);pointer-events: none;`);
                 for(let layers of layerss){ //头饰
                     layers.setAttribute('style', `position: absolute;left: 0;right: 0;top: 0;bottom: 0;`);
                     const layer_centers = layers.querySelectorAll('div.layer.center');
@@ -140,12 +149,21 @@
                 fixusericon(div,comment);
                 return;
             }
-            if(canvas.getAttribute('style').indexOf('--avatar-canvas-width:') != -1){
-                iconsize = canvas.getAttribute('style')
-                iconsize = iconsize.substring(iconsize.indexOf('--avatar-canvas-width:') + 23,iconsize.indexOf('px;') + 2)
+            if(canvas.getAttribute('style').indexOf('--avatar-canvas-width:') != -1){ //获取默认头像框尺寸
+                iconsize = canvas.getAttribute('style');
+                //iconsize = iconsize.substring(iconsize.indexOf('--avatar-canvas-width:') + 23,iconsize.indexOf('px;') + 2);
+                iconsize = iconsize.split(';');
+                for(let aaa of iconsize){
+                    if(aaa.indexOf('--avatar-canvas-width:') != -1){
+                        iconsize = aaa.substring(aaa.indexOf('--avatar-canvas-width:') + 23,aaa.indexOf('px') + 2);
+                        break;
+                    }
+                }
             }
-            canvas.setAttribute('style', `width: `+ iconsize + `;height: `+ iconsize + `;position: absolute;left: 50%;top: 50%;transform: translate(-50%, -50%);
-                pointer-events: none;`);
+            else if(canvas.style.width != null){ //如果已经写死的话，就直接沿用
+                iconsize = canvas.style.width;
+            }
+            canvas.setAttribute('style', `width: `+ iconsize + `;height: `+ iconsize + `;position: absolute;left: 50%;top: 50%;transform: translate(-50%, -50%);pointer-events: none;`);
             //canvas.setAttribute('style', canvas.getAttribute('style') + `;left: 50%;top: 50%;transform: translate(-50%, -50%);pointer-events: none;`);
             for(let layers of layerss){ //头饰
                 layers.setAttribute('style', `position: absolute;left: 0;right: 0;top: 0;bottom: 0;`);

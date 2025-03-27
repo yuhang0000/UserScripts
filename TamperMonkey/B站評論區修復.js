@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站評論區修復
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.9_2025-3-27
+// @version      v1.10_2025-3-28
 // @description  修复B站视频底下评论区 css 样式表。
 // @author       欲行肆灵
 // @match        https://www.bilibili.com/*
@@ -1260,7 +1260,7 @@
         observer.observe(feed, {childList: true,});
 
         //判断是否到达底部 判断评论区是否被重置
-        function check2bottomplus(){
+        function check2bottomplus(){ // '没有更多评论'
             let contents_end = bilicomment.shadowRoot.querySelector("div[id='end']");//是否到底
             if(contents_end != null){
                 let bottombar = contents_end.querySelector("div.bottombar");
@@ -1270,6 +1270,18 @@
                 else{
                     bottombar.setAttribute('style',`padding-bottom: 100px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
                 }
+            }
+        }
+        function shutoffcomment(aaaaa){ //关闭评论区
+            if(aaaaa == 'DIV' && removedDOMaction == false){
+                removedDOMaction = true;
+                for(let mainobserverss of mainobservers){ //清除全部监听器
+                    mainobserverss.disconnect();
+                }
+                observer.disconnect();
+                check2bottom.disconnect();
+                bilicomment.setAttribute('fixed','false');
+                console.log('评论区被重置 & 关闭!');
             }
         }
         let removedDOMaction = false;
@@ -1285,24 +1297,26 @@
                         //console.log(removedNode.nodeName);
                         //console.log(removedNode.nodeValue);
                         //if(removedNode.getAttribute('id') == 'contents'){ //如果评论列表没了, 说明整个评论区被充值了
-                        if(removedNode.nodeName == '#comment' && removedDOMaction == false){
-                            removedDOMaction = true;
-                            for(let mainobserverss of mainobservers){ //清除全部监听器
-                                mainobserverss.disconnect();
-                            }
-                            observer.disconnect();
-                            check2bottom.disconnect();
-                            bilicomment.setAttribute('fixed','false');
-                            console.log('评论区被重置!');
-                        }
+                        shutoffcomment(removedNode.nodeName);
                     });
                 }
             });
         });
         check2bottom.observe(bilicomment.shadowRoot, {childList: true,});
-        check2bottomplus();
+        check2bottomplus(); //一上来就看看是否到底部
 
-        findcomment(feed);
+        findcomment(feed); //扫描评论列表
+
+        async function audel(){ //啊, 怎么会有评论区一打开就手动关闭的情况欸
+            //await delay(1000);
+            let aaa = bilicomment.getBoundingClientRect();
+            //console.log(aaa);
+            if(aaa.bottom == 0 && aaa.height == 0 && aaa.left == 0 && aaa.right == 0 && aaa.top == 0 && aaa.width == 0 && aaa.x == 0 && aaa.y == 0){
+               //console.log('你是不是把品论去给关了!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+                shutoffcomment("DIV");
+            }
+        }
+        audel();
     }
 
     //修复主函数

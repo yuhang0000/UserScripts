@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站評論區修復
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.11_2025-3-28
+// @version      v1.12_2025-4-5
 // @description  修复B站视频底下评论区 css 样式表。
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -24,7 +24,23 @@
     //笔记图片默认展示为原图
     //window.bilifiximg = true;
 
+    //保存时, 需要隐藏 DOM 节点的清单.
     var sethidearray = new Array();
+
+    //目标时间转时间戳
+    function gettime(time) {
+        if(time.indexOf(':') != -1){
+            time = time.split(':');
+            console.log(time.length);
+            if(time.length > 2){
+                time = (time[0] * 60 * 60) + (time[1] * 60) + Number(time[2]);
+            }
+            else{
+                time = (time[0] * 60) + Number(time[1]);
+            }
+        }
+        return time;
+    }
 
     //这是延时
     function delay(ms) {
@@ -1038,6 +1054,15 @@
                                 }
                             }
                             fffff();
+
+                            //视频播放时间跳转
+                            if(bili_rich_link.getAttribute('data-type') == "seek"){
+                                let video = document.querySelector('video');
+                                bili_rich_link.addEventListener('click', function(){
+                                    video.currentTime = bili_rich_link.getAttribute('data-video-time');
+                                    video.play();
+                                });
+                            }
                         }
                     }
                 }

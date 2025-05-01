@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站動態導航 (歸檔員自用)
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.8_2025-3-22
+// @version      v1.9_2025-5-1
 // @description  能導航到指定日期的動態，僅對 https://space.bilibili.com/<你UID>/dynamic/ 作用，僅歸檔員自用。
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -170,6 +170,7 @@
             //检查是否到达世界的尽头
             let no_more = document.querySelector('.bili-dyn-list-no-more');
             let itemss = document.querySelector('.bili-dyn-list__items');
+            let loadmore_button = document.querySelector('.bili-dyn-list__loadmore');
             //console.log(no_more);
             //console.log(itemss.length);
             if (no_more != undefined && itemss.length == undefined && two != 2) {
@@ -185,6 +186,9 @@
             else if(window.areufind != true){
                 //console.log("# 错误: \n" + err);
                 console.log("%c# 遇到了一些错误, 尝试重试 #",window.color_red);
+                if(loadmore_button != null){ //檢查 "加载更多" 按鈕是否存在
+                    loadmore_button.click();
+                }
                 await delay(1000);
                 window.scrollTo(0, 0);
                 window.scrollTo(0, document.documentElement.scrollHeight);

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站評論區修復
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.12_2025-4-5
+// @version      v1.13_2025-5-5
 // @description  修复B站视频底下评论区 css 样式表。
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -136,12 +136,18 @@
                             source.setAttribute('style', `width: 100%;height: 100%;`);
                         }
                     }
-                    let layer_bigvip = layers.querySelector('div.layer'); //大会员
+                    let layer_bigvip = layers.querySelector('div[class="layer"]'); //大会员
                     if(layer_bigvip != null){
                         layer_bigvip.setAttribute('style',layer_bigvip.getAttribute('style') + `position: absolute;isolation: isolate;overflow: hidden;`);
                         let layer_res = layer_bigvip.querySelector('div.layer-res');
                         layer_res.setAttribute('style',layer_res.getAttribute('style') + `width: 100%;height: 100%;isolation: isolate;overflow: hidden;background-size: cover;
-                    background-repeat: no-repeat;background-position: center;`);
+                        background-repeat: no-repeat;background-position: center;`);
+                        let pic = layer_res.querySelector('picture'); //默认这里显示的是大会员 icon , 如果 picture 存在的话, 就要显示其他图标了.
+                        if(pic != null){
+                            pic.setAttribute('style',`width: 100%;height: 100%;display: inline-block;`);
+                            let img = pic.querySelector('img');
+                            img.setAttribute('style', `width: 100%;height: 100%;`);
+                        }
                     }
                 }
             }
@@ -186,7 +192,8 @@
                 layers.setAttribute('style', `position: absolute;left: 0;right: 0;top: 0;bottom: 0;`);
                 const layer_centers = layers.querySelectorAll('div.layer.center');
                 for(let layer_center of layer_centers){
-                    layer_center.setAttribute('style', `isolation: isolate;overflow: hidden;left: 50%;top: 50%;transform: translate(-50%, -50%);width: 48px;height: 48px;opacity: 1;border-radius: 50%;`);
+                    layer_center.setAttribute('style', `isolation: isolate;overflow: hidden;left: 50%;top: 50%;transform: translate(-50%, -50%);width: 48px;height: 48px;opacity: 1;border-radius: 50%;
+                    position: absolute;`);
                     const layer_res = layer_center.querySelector('div.layer-res');
                     layer_res.setAttribute('style', `width: 100%;height: 100%;isolation: isolate;overflow: hidden;background-size: cover;background-repeat: no-repeat;background-position: center;`);
                     const img = layer_center.querySelector('img');
@@ -196,12 +203,18 @@
                         source.setAttribute('style', `width: 48px; height: 48px; opacity: 1; border-radius: 50%;`);
                     }
                 }
-                let layer_bigvip = layers.querySelector('div.layer'); //大会员
+                let layer_bigvip = layers.querySelector('div[class="layer"]'); //大会员
                 if(layer_bigvip != null){
                     layer_bigvip.setAttribute('style',layer_bigvip.getAttribute('style') + `position: absolute;isolation: isolate;overflow: hidden;`);
                     let layer_res = layer_bigvip.querySelector('div.layer-res');
                     layer_res.setAttribute('style',layer_res.getAttribute('style') + `width: 100%;height: 100%;isolation: isolate;overflow: hidden;background-size: cover;
                     background-repeat: no-repeat;background-position: center;`);
+                    let pic = layer_res.querySelector('picture'); //默认这里显示的是大会员 icon , 如果 picture 存在的话, 就要显示其他图标了.
+                    if(pic != null){
+                        pic.setAttribute('style',`width: 100%;height: 100%;display: inline-block;`);
+                        let img = pic.querySelector('img');
+                        img.setAttribute('style', `width: 100%;height: 100%;`);
+                    }
                 }
             }
         }
@@ -875,6 +888,7 @@
                 return;
             }
             let bili_comment_user_info = commentbody.querySelector("bili-comment-user-info");
+            bili_comment_user_info.setAttribute('style',`--bili-comment-user-info-name-color: var(--text2);`);
             let commentmain = commentbody.querySelector("div[id='main']");
             fixusericon(bili_comment_renderer,true); //用户头像
 

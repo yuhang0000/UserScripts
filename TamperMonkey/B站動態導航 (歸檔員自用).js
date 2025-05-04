@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站動態導航 (歸檔員自用)
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.9_2025-5-1
+// @version      v1.10_2025-5-5
 // @description  能導航到指定日期的動態，僅對 https://space.bilibili.com/<你UID>/dynamic/ 作用，僅歸檔員自用。
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -271,7 +271,29 @@
                 }
 
                 if(item != undefined){
-                    if(itemtime > time){
+                    //好好好, 用 "#" 来标记个数是吧
+                    if( String(time).indexOf("#") != -1){ 
+                        if(item_number < time.replace("#","") /*懒了, 直接嵌入食用*/ ){
+                            if(two != 2){
+                                item.remove();
+                                item_number = item_number + 1;
+                            }
+                        }
+                        else if(itemtag != undefined){
+                            if(two == true){
+                                item.remove();
+                                item_number = item_number + 1;
+                            }
+                        }
+                        else{
+                            item.scrollIntoView();
+                            window.scrollTo(0, window.scrollY - 70);
+                            console.log("%c完成!!!",window.color_blue);
+                            window.areufind = true;
+                        }
+                    }
+                    //其余的是指定时间来停止, 而不是指定个数.
+                    else if(itemtime > time){ 
                         if(two != 2){
                             item.remove();
                             item_number = item_number + 1;
@@ -347,7 +369,9 @@
             text = text + "#===========================================================================================================#\n";
             text = text + "# 舉個栗子\:\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t#\n";
             text = text + "# bbdel\(\"2024-12-5\"\,\"1000\"\,\"2\"\)\t導航到 2024-12-5 的動態, 延時1000ms\;\t\t\t\t\t\t\t\t\t\t#\n";
+            text = text + "# bbdel\(\"#233\"\,\"1000\"\,\"2\"\)\t\t從當前頁面往下翻閲 233 條動態, 延時1000ms\;\t\t\t\t\t\t\t\t\t#\n";
             text = text + "# bbdel\(\"2024-12-5\"\)\t\t\t保留置頂, 清除至 2024-11-16 之間的動態 \(並不是真的把動態刪掉\)\;\t\t\t\t#\n";
+            text = text + "# bbdel\(\"#233\"\,\"10\"\,\"2\"\)\t\t保留置頂, 延時10ms, 從上置下清除 233 條動態 \(並不是真的把動態刪掉\)\;\t\t\t#\n";
             text = text + "# bbdel\(\"1733392922\"\,\"100\"\,\"1\"\)\t不保留置頂, 延時100ms, 清除至 2024-12-5 之間的動態 \(並不是真的把動態刪掉\)\。\t#\n";
             text = text + "#############################################################################################################";
             console.log(text,window.color_lightblue);
@@ -383,6 +407,7 @@
             let Y;
             let M;
             let D;
+            let time;
 
             //给了目标日期
             if(input == "" || input == undefined || input == null){
@@ -390,76 +415,87 @@
                     input = "1970-1-1";
                 }
             }
-            if(input != "" && input != undefined && input != null){
-                input = input.replace(/\//g, "-");
-                input = input.replace(/年/g, "-");
-                input = input.replace(/月/g, "-");
-                input = input.replace(/日/g, "");
+            if(input != null && (input.indexOf("#") != -1 || input.indexOf(".") != -1 || input.indexOf("p") != -1) ){ //这里输入的是指定获取个数, 而不是日期
+                //time = -1;
+                input = input.replace("#","");
+                input = input.replace(".","");
+                input = input.replace("p","");
+                console.log("%c截止到第 " + input + " 项结束",window.color_blue);
+                time = "#" + input;
+            }
+            //没有指定个数的话, 说明 input 内容是日期
+            else{
+                if(input != "" && input != undefined && input != null){
+                    input = input.replace(/\//g, "-");
+                    input = input.replace(/年/g, "-");
+                    input = input.replace(/月/g, "-");
+                    input = input.replace(/日/g, "");
 
-                if((input.split("-").length - 1) == 0){
-                    if(input == "0"){
-                        input = "1970-1-1";
+                    if((input.split("-").length - 1) == 0){
+                        if(input == "0"){
+                            input = "1970-1-1";
+                        }
+                        else if(input.length > 4){
+                            input = new Date(input * 1);
+                            console.log(input);
+                            input = input.getFullYear() + "-" + (input.getMonth() + 1) + "-" + input.getDate();
+                        }
+                        else if(input.length > 2){
+                            input = input + "-1-1";
+                        }
+                        else{
+                            input = now.getFullYear() + "-1-" + input;
+                        }
                     }
-                    else if(input.length > 4){
-                        input = new Date(input * 1);
-                        console.log(input);
-                        input = input.getFullYear() + "-" + (input.getMonth() + 1) + "-" + input.getDate();
+
+                    Y = input.substring(0,input.indexOf("-"));
+                    M = input.substring(input.indexOf("-") + 1);
+                    if(M.indexOf("-") != -1){
+                        M = M.substring(0,M.indexOf("-"));
                     }
-                    else if(input.length > 2){
-                        input = input + "-1-1";
+                    if((input.split("-").length - 1) > 1){
+                        D = input.substring((Y + "-" + M + "-").length);
                     }
                     else{
-                        input = now.getFullYear() + "-1-" + input;
-                    }
-                }
-
-                Y = input.substring(0,input.indexOf("-"));
-                M = input.substring(input.indexOf("-") + 1);
-                if(M.indexOf("-") != -1){
-                    M = M.substring(0,M.indexOf("-"));
-                }
-                if((input.split("-").length - 1) > 1){
-                    D = input.substring((Y + "-" + M + "-").length);
-                }
-                else{
-                    D = 1;
-                }
-
-                if((input.split("-").length - 1) > 2){
-                    console.log("%c\(#`O′\) 你参数写错了欸。",window.color_red);
-                    console.log("%c键入 bbdel\(\"help\"\) 以尋求幫助。",window.color_blue);
-                    return "################################";
-                }
-                else if((input.split("-").length - 1) == 1){
-                    if(Y.length > 2){
                         D = 1;
                     }
-                    else{
-                        D = M;
-                        M = Y;
-                        Y = now.getFullYear();
+
+                    if((input.split("-").length - 1) > 2){
+                        console.log("%c\(#`O′\) 你参数写错了欸。",window.color_red);
+                        console.log("%c键入 bbdel\(\"help\"\) 以尋求幫助。",window.color_blue);
+                        return "################################";
+                    }
+                    else if((input.split("-").length - 1) == 1){
+                        if(Y.length > 2){
+                            D = 1;
+                        }
+                        else{
+                            D = M;
+                            M = Y;
+                            Y = now.getFullYear();
+                        }
                     }
                 }
+
+                //没给具体日期
+                else{
+                    let item_time = finditem(-1,two,now);
+                    item_time = new Date(item_time + 86400000);
+                    Y = item_time.getFullYear();
+                    M = item_time.getMonth() + 1;
+                    D = item_time.getDate();
+                }
+
+                console.log("年: " + Y);
+                console.log("月: " + M);
+                console.log("日: " + D);
+
+                time = new Date(Y + "-" + M + "-" + D);
+                time = time.valueOf();
+
+                console.log("当前时间戳: " + now.valueOf());
+                console.log("目标时间戳: " + time);
             }
-
-            //没给具体日期
-            else{
-                let item_time = finditem(-1,two,now);
-                item_time = new Date(item_time + 86400000);
-                Y = item_time.getFullYear();
-                M = item_time.getMonth() + 1;
-                D = item_time.getDate();
-            }
-
-            console.log("年: " + Y);
-            console.log("月: " + M);
-            console.log("日: " + D);
-
-            let time = new Date(Y + "-" + M + "-" + D);
-            time = time.valueOf();
-
-            console.log("当前时间戳: " + now.valueOf());
-            console.log("目标时间戳: " + time);
 
             //要不要把置顶给干了
             if(two == 2){
@@ -480,7 +516,12 @@
                 }
                 console.log("是否把置顶给干了: " + two);
                 //防误操作，先询问
-                let areudel = prompt("需要删除 " + Y + "-" + M + "-" + D + " 之前的动态吗?  (Y/N)", "N");
+                //啊啊啊, 这里如果 Y, M, D 变量未赋值的话, 说明用户键入的是指定个数, 而不是时间.
+                let questiontext = "需要删除 " + Y + "-" + M + "-" + D + " 之前的动态吗";
+                if(Y == null){
+                    questiontext = "需要删除前 " + input + " 条动态吗";
+                }
+                let areudel = prompt(questiontext + "?  (Y/N)", "N");
                 if(areudel == "Y" || areudel == "y" || areudel == "yes" || areudel == "Yes" || areudel == 1 || areudel == true){
                     console.log("%c出发喽~~~",window.color_blue);
                 }
@@ -491,7 +532,7 @@
             }
 
             window.areufind = false;
-            run(time,now,two,ddd);
+            run(time,now,two,ddd); //入口在这 time:指定时间 now:当前时间 two:是删除还是遍历 ddd:延时
             if(window.areufind == false){
                 returns = undefined;
             }

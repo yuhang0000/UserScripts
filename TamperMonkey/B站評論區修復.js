@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站評論區修復
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.13_2025-5-5
+// @version      v1.14_2025-6-1
 // @description  修复B站视频底下评论区 css 样式表。
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -1310,10 +1310,12 @@
                 else{
                     bottombar.setAttribute('style',`padding-bottom: 100px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
                 }
+                console.log("见底啦~~~");
             }
         }
         function shutoffcomment(aaaaa){ //关闭评论区
-            if(aaaaa == 'DIV' && removedDOMaction == false){
+            //if(aaaaa == 'DIV' && removedDOMaction == false){
+            if(aaaaa == '#comment' && removedDOMaction == false){
                 removedDOMaction = true;
                 for(let mainobserverss of mainobservers){ //清除全部监听器
                     mainobserverss.disconnect();

@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         B站個人主頁優化 (歸檔員自用)
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.8_2024-10-18
+// @version      v1.9_2025-7-2
 // @description  Bili 個人主頁優化.
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
 // @match        https://t.bilibili.com/*
+// @match        file:///*
 // @grant        none
 // @license      GPLv3
 // @icon         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAA7EAAAOxAGVKw4bAAACnklEQVRYR+2XX0hTURzHv9edXVuNNaFhm+CLiBXh8qXaUGRBD+YCX8oSwerm34cG+RKxMGlILxMEwYxuTVCazxV7S8Q0eskUscboIWOzWpDWck5n9rDuzXO3dbu4raA+cGHn+/ve8/vew93ZGfBXolIRNPd40P/kAzrcXmi0OqlFFo1Whw63F/2TYTT3eKBSEaklPZV1TRia3xQv58ikohAarQ7OkUlqjsq6JqkNAFKnystTUePSCis6B31wt9YgGvlM1aRotDp0DvpQWmGl9DQrwEgFAABRs7jiGUuaJDA9BXfbCUS/LFO6QLrmgekp3DxnQ3x9jdKRLgDw68lShVDq/8HPAETNwlbfBkvtWRSVHsSOndotvu2zuhJBMDCHp4/uY2z0lrAaiQAFhUW4PPAQxfsOUTdli4VXL9Dbbsen90EGRM2ia/RZzpoLLPhn0F1/hMB2ujXnzQGguMwM26kWAou9gSrMTvjAOzkshRcpfbvoDUZwLh7lVTWiZrE3MOBnYiBqVhQd1aaMNxfQG4zoGw+J4/hajFDNAWStOZA8N2HzU+5OuUQ+QHlVDTgXDwDgnRxmJ3wSB41CP4Oh+U1KaTpA74594yHoDUYAiSV0VJuouhQ5v6Sf/AoIk0k/p0OhXz5AlpEPsBReFJ9k+eM7STUZhX75AHevXQTn4vFtYwP3ulqk5SQU+uVfwkyj+CXMMv8DEMTX16jfA73BmLRnZ4rde/ZS49WVCMGb+ecoMR8VxQs37oB3cr/zFVJEQWERznffprRgYI7B8cZLaLzaRxVyxXCPgwFh8xNHsjKztJ5V3vpncb3+8B86lPpn0NtWmziUChA1i2Nn2mE92QhTyX7ka3ZtuWX7xKJfEXr9ElMPhvHYO5DqT8q/yXdT6gC1Lkc+ZAAAAABJRU5ErkJggg==
@@ -13,6 +14,11 @@
 
 (function() {
     'use strict';
+
+    //这是延时
+    function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
     // 定义一个函数来检查和修改每个 .bili-album 元素 (北站又 TM 改界面，现在是检查 .bili-dyn-gallery 元素)
     function modifyAlbums() {
@@ -365,12 +371,197 @@
     }
 
     // 初始化检查
-    var runtimes = 0;
+    var runtimes = 0; //统计次数
+    let outputpageitemnum = 0; //也是统计次数
+    let outputpagenowtime = null; //该页面创建的时间
+    addoutputpage();
     //modifyAlbums();
+
+    //添加 Outut_page
+    async function addoutputpage(){
+        let output_page_div = document.createElement('div');
+        output_page_div.innerHTML = `<div class="output_page_background close" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    animation-fill-mode: forwards;
+    width: 100vw;
+    height: 100vh;
+    background-color: #00000044;
+    display: flex;
+    z-index: 99999;
+	animation-fill-mode: forwards;">
+	<div class="output_page" style="
+	    position: fixed;
+	    width: 80vw;
+	    height: 80vh;
+	    background-color: white;
+	    display: block;
+	    top: 10vh;
+	    left: 10vw;
+	    border-radius: 8px;
+	    box-shadow: 0 0 24px 0px #00000055;">
+	    <style>
+	     .output_page_btn:hover {
+	         background-color: var(--brand_blue_hover);
+	     }
+	     .output_page_btn{
+	         background-color: var(--brand_blue);
+	     }
+	     .output_page_btn_esc:hover {
+	         background-color: var(--stress_red_hover);
+	     }
+	     .output_page_btn_esc{
+	         background-color: var(--stress_red);
+	     }
+	     .output_page_text:hover {
+	         border-color: #aaaaaaaa;
+	     }
+	     .output_page_text{
+	         border-color: #aaaaaa33;
+	     }
+	     .output_page_background.close{
+	         animation: output_page_close 1s;
+	     }
+	     .output_page_background{
+	         animation: output_page_open 1s;
+	     }
+
+	     @keyframes output_page_close{
+	         0% {opacity: 1; display: block;}
+	         100% {opacity: 0; display: none;}
+	     }
+	     @keyframes output_page_open{
+	         100% {opacity: 1; display: block;}
+	         0% {opacity: 0; display: block;}
+	     }
+	    </style>
+	    <div style="
+	    display: flex;
+	    flex-direction: column;
+	    height: 100%;">
+	    	<div style="
+	    	display: flex;
+	    	flex-direction: row;
+	    	align-items: center;
+	    	flex-shrink: 0;">
+	    		<span class="output_page_title" style="
+	    		margin: 24px;
+	    		font-size: 2em;">Title</span>
+	    		<div style="
+	    		position: absolute;
+	    		right: 24px;">
+	    			<button class="output_page_btn output_page_btn_cover" style="
+	    			font-size: 1em;
+	    			color: white;
+	    			padding: 6px 16px;
+	    			border-style: none;
+	    			border-radius: 4px;
+	    			transition: background-color 0.5s;">封面</button>
+	    			<button class="output_page_btn output_page_btn_copy" style="
+	    			margin-left: 12px;
+	    			font-size: 1em;
+	    			color: white;
+	    			padding: 6px 16px;
+	    			border-style: none;
+	    			border-radius: 4px;
+	    			transition: background-color 0.5s;">复制</button>
+	    			<button class="output_page_btn output_page_btn_esc" style="
+	    			margin-left: 12px;
+	    			font-size: 1em;
+	    			color: white;
+	    			padding: 6px 16px;
+	    			border-style: none;
+	    			border-radius: 4px;
+	    			transition: background-color 0.5s;">关闭</button>
+	    		</div>
+	    	</div>
+	    	<div style="
+	    	display: block;
+	    	padding: 0 24px 24px 24px;
+	    	width: 100%;
+	    	height: 100%;
+	    	flex-grow: 1;
+	    	box-sizing: border-box;">
+	    		<textarea class="output_page_text" style="
+	    		height: 100%;
+	    		width: 100%;
+	    		display: block;
+	    		background-color: #aaaaaa22;
+	    		border-radius: 4px;
+	    		border-style: double;
+	    		font-size: 1em;
+	    		font-family: monospace;
+	    		padding: 4px;
+	    		vertical-align: baseline;
+	    		box-sizing: border-box;
+	    		resize: none;
+	    		line-height: 1.2em;
+	    		transition: border-color 0.5s;"></textarea>
+	    	</div>
+		</div>
+	</div>
+</div>`;
+        output_page_div.style.visibility = 'hidden';
+        document.body.appendChild(output_page_div);
+
+        let output_page_btn_esc = output_page_div.querySelector('.output_page_btn_esc');
+        let output_page_background = output_page_div.querySelector('.output_page_background');
+        output_page_btn_esc.addEventListener('click', function(e){ closeoutputpage(e); } );
+        output_page_background.addEventListener('click', function(e){ closeoutputpage(e); } );
+
+        function closeoutputpage(e) {
+            if(e.target == output_page_background || e.target == output_page_btn_esc){
+                output_page_background.classList.add('close');
+            }
+        }
+
+        await delay(2000);
+        output_page_div.style.visibility = 'visible';
+    }
+
+    async function addoutputpageitem(){
+        if(window.location.href.indexOf('file://') != -1 && outputpagenowtime == null){
+            let localinfo = document.querySelector('meta[id="localinfo"]');
+            if(localinfo != -1){
+                outputpagenowtime = localinfo.getAttribute('localdate');
+                console.log(outputpagenowtime);
+            }
+            else{
+
+                return;
+            }
+        }
+
+        let items = document.querySelectorAll('.bili-dyn-list__item');
+        let num = outputpageitemnum;
+        let length = items.length; //真怕哪天会抽风
+        for(let num1 = num; num1 < length; num1++){ //遍历循环每个动态
+            let item = items[num1];
+            let dyn_time = item.querySelector('.bili-dyn-time');
+            if(dyn_time.innerText.indexOf('视频') == -1){
+                continue;
+            }
+
+            let title = item.querySelector('.bili-dyn-card-video__title');
+            let cover = item.querySelector('.b-img__inner').querySelector('img').src;
+            let time = item.querySelector('.bili-dyn-time').innerText;
+            console.log(title.innerText + '\n' + cover + '\n' + time);
+        }
+        outputpageitemnum = length;
+    }
+
+    function gettime(time){
+        if(outputpagenowtime == null){
+
+        }
+        return;
+    }
 
     //重复运行
     (async function autorun() {
         await modifyAlbums();
+        await addoutputpageitem();
         setTimeout(autorun, 1000);
     })();
 

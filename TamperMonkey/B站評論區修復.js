@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站評論區修復
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.14_2025-6-1
+// @version      v1.15_2025-7-27
 // @description  修复B站视频底下评论区 css 样式表。
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -481,10 +481,17 @@
         }
         let sort_div = navbar.querySelector("div.sort-div");
 
+        let commentisdisable = false; //false 为评论区已关闭;true 为精选评论
+
         function textboxdisable(){
             let commentbox = header.shadowRoot.querySelector("div[id='commentbox']");
             commentbox.setAttribute('style',`flex-shrink: 0;transition: height 0.2s;height: var(--bili-comments-commentbox-height, auto);`);
             let disabled_commentbox = commentbox.querySelector("div[id='disabled-commentbox']");
+            if(disabled_commentbox == null){ //我服了, 假如找不到, 就说明那个文本框存在
+                commentisdisable = true;
+                console.log('评论被up主精选后, 对所有人可见');
+                return;
+            }
             disabled_commentbox.setAttribute('style',`display: flex;height: 50px;`);
             let user_avatar = commentbox.querySelector("div[id='user-avatar']");
             user_avatar.setAttribute('style',`flex-shrink: 0;width: 80px;height: 50px;display: flex;justify-content: center;align-items: center;`);
@@ -495,63 +502,64 @@
             justify-content: center;`);
         }
 
-        if(sort_div == null){ //如果是null, 则说明评论区以关闭
+        if(sort_div == null){ //如果是null, 则说明评论区受限: 关闭&精选
             textboxdisable();
-            let contents = bilicomment.shadowRoot.querySelector("div[id='contents']");
-            contents.setAttribute('style',`display: none;padding-top: 14px;position: relative;`);
-            let contents_end = bilicomment.shadowRoot.querySelector("div[id='end']"); //是否到底
-            let bottombar = contents_end.querySelector("div.bottombar");
-            if(contents_end.className == 'limit'){ //动态首页和个人主页, 这两个地方底部边距矮一点
-                bottombar.setAttribute('style',`padding-bottom: 20px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
-            }
-            else{
-                bottombar.setAttribute('style',`padding-bottom: 100px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
-            }
-            console.log('当前评论区已关闭');
-            return 'disable';
-        }
-        sort_div.setAttribute('style',`display: inline-block;height: 11px;margin: 0 3px;border-left: solid 1px var(--text3);vertical-align: -2px;`);
-        let sort_div_button = navbar.querySelectorAll("bili-text-button");
-        /*for(let button of sort_div_button){
-            button = button.shadowRoot.querySelector("button");
-            button.setAttribute('style',`border: none;background: transparent;cursor: pointer;font: inherit;`);
-        }*/
-        if(sort_div_button.length != 0){ //最热 | 最新
-            function checkhotortime(){
-                if(sort_actions.className.indexOf("hot") != -1){
-                    sort_button1.style.color = "var(--text1)";
-                    sort_button2.style.color = "var(--text3)";
+            if(commentisdisable == false){
+                let contents = bilicomment.shadowRoot.querySelector("div[id='contents']");
+                contents.setAttribute('style',`display: none;padding-top: 14px;position: relative;`);
+                let contents_end = bilicomment.shadowRoot.querySelector("div[id='end']"); //是否到底
+                let bottombar = contents_end.querySelector("div.bottombar");
+                if(contents_end.className == 'limit'){ //动态首页和个人主页, 这两个地方底部边距矮一点
+                    bottombar.setAttribute('style',`padding-bottom: 20px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
                 }
                 else{
-                    sort_button1.style.color = "var(--text3)";
-                    sort_button2.style.color = "var(--text1)";
+                    bottombar.setAttribute('style',`padding-bottom: 100px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
                 }
+                console.log('当前评论区已关闭');
+                return 'disable';
             }
-            sort_div_button[0].setAttribute('style',`--_container-height: 28px;--_leading-space: 6px;--_trailing-space: 6px;
-            --_label-text-size: var(--bili-comments-font-size-sort, 13px);display: inline-flex;height: var(--_container-height);outline: none;font-family: var(--_label-text-font);
-            font-size: var(--_label-text-size);line-height: var(--_label-text-line-height);font-weight: var(--_label-text-weight);-webkit-tap-highlight-color: transparent;vertical-align: middle;`);
-            let sort_button1 = sort_div_button[0].shadowRoot.querySelector("button");
-            sort_button1.setAttribute('style',`display: inline-flex;align-items: center;justify-content: center;box-sizing: border-box;border: none;outline: none;user-select: none;appearance: none;
-            background: rgba(0, 0, 0, 0);text-decoration: none;inline-size: 100%;position: relative;z-index: 0;height: 100%;font: inherit;color: var(--text1);;
-            padding-inline-start: var(--_leading-space);padding-inline-end: var(--_trailing-space);cursor: pointer;`);
-            sort_div_button[1].setAttribute('style',`--_container-height: 28px;--_leading-space: 6px;--_trailing-space: 6px;
-            --_label-text-size: var(--bili-comments-font-size-sort, 13px);display: inline-flex;height: var(--_container-height);outline: none;font-family: var(--_label-text-font);
-            font-size: var(--_label-text-size);line-height: var(--_label-text-line-height);font-weight: var(--_label-text-weight);-webkit-tap-highlight-color: transparent;vertical-align: middle;`);
-            let sort_button2 = sort_div_button[1].shadowRoot.querySelector("button");
-            sort_button2.setAttribute('style',`display: inline-flex;align-items: center;justify-content: center;box-sizing: border-box;border: none;outline: none;user-select: none;appearance: none;
-            background: rgba(0, 0, 0, 0);text-decoration: none;inline-size: 100%;position: relative;z-index: 0;height: 100%;font: inherit;color: var(--text3);;
-            padding-inline-start: var(--_leading-space);padding-inline-end: var(--_trailing-space);cursor: pointer;`);
-            sort_button1.addEventListener("click",checkhotortime);
-            sort_button2.addEventListener("click",checkhotortime);
-            sort_button1.addEventListener("mouseout",checkhotortime);
-            sort_button2.addEventListener("mouseout",checkhotortime);
-            sort_button1.addEventListener("mouseover",function(){
-                sort_button1.style.color = "var(--brand_blue)";
-            });
-            sort_button2.addEventListener("mouseover",function(){
-                sort_button2.style.color = "var(--brand_blue)";
-            });
         }
+        if(sort_div != null){ //两个排序按钮
+            sort_div.setAttribute('style',`display: inline-block;height: 11px;margin: 0 3px;border-left: solid 1px var(--text3);vertical-align: -2px;`);
+            let sort_div_button = navbar.querySelectorAll("bili-text-button");
+            if(sort_div_button.length != 0){ //最热 | 最新
+                function checkhotortime(){
+                    if(sort_actions.className.indexOf("hot") != -1){
+                        sort_button1.style.color = "var(--text1)";
+                        sort_button2.style.color = "var(--text3)";
+                    }
+                    else{
+                        sort_button1.style.color = "var(--text3)";
+                        sort_button2.style.color = "var(--text1)";
+                    }
+                }
+                sort_div_button[0].setAttribute('style',`--_container-height: 28px;--_leading-space: 6px;--_trailing-space: 6px;
+                --_label-text-size: var(--bili-comments-font-size-sort, 13px);display: inline-flex;height: var(--_container-height);outline: none;font-family: var(--_label-text-font);
+                font-size: var(--_label-text-size);line-height: var(--_label-text-line-height);font-weight: var(--_label-text-weight);-webkit-tap-highlight-color: transparent;vertical-align: middle;`);
+                let sort_button1 = sort_div_button[0].shadowRoot.querySelector("button");
+                sort_button1.setAttribute('style',`display: inline-flex;align-items: center;justify-content: center;box-sizing: border-box;border: none;outline: none;user-select: none;appearance: none;
+                background: rgba(0, 0, 0, 0);text-decoration: none;inline-size: 100%;position: relative;z-index: 0;height: 100%;font: inherit;color: var(--text1);;
+                padding-inline-start: var(--_leading-space);padding-inline-end: var(--_trailing-space);cursor: pointer;`);
+                sort_div_button[1].setAttribute('style',`--_container-height: 28px;--_leading-space: 6px;--_trailing-space: 6px;
+                --_label-text-size: var(--bili-comments-font-size-sort, 13px);display: inline-flex;height: var(--_container-height);outline: none;font-family: var(--_label-text-font);
+                font-size: var(--_label-text-size);line-height: var(--_label-text-line-height);font-weight: var(--_label-text-weight);-webkit-tap-highlight-color: transparent;vertical-align: middle;`);
+                let sort_button2 = sort_div_button[1].shadowRoot.querySelector("button");
+                sort_button2.setAttribute('style',`display: inline-flex;align-items: center;justify-content: center;box-sizing: border-box;border: none;outline: none;user-select: none;appearance: none;
+                background: rgba(0, 0, 0, 0);text-decoration: none;inline-size: 100%;position: relative;z-index: 0;height: 100%;font: inherit;color: var(--text3);;
+                padding-inline-start: var(--_leading-space);padding-inline-end: var(--_trailing-space);cursor: pointer;`);
+                sort_button1.addEventListener("click",checkhotortime);
+                sort_button2.addEventListener("click",checkhotortime);
+                sort_button1.addEventListener("mouseout",checkhotortime);
+                sort_button2.addEventListener("mouseout",checkhotortime);
+                sort_button1.addEventListener("mouseover",function(){
+                    sort_button1.style.color = "var(--brand_blue)";
+                });
+                sort_button2.addEventListener("mouseover",function(){
+                    sort_button2.style.color = "var(--brand_blue)";
+                });
+            }
+        }
+
         let commentbox = header.shadowRoot.querySelector("div[id='commentbox']");
         commentbox.setAttribute('style',`flex-shrink: 0;transition: height 0.2s;height: var(--bili-comments-commentbox-height, auto);`);
         let bili_comment_box = header.shadowRoot.querySelector("bili-comment-box");

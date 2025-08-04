@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站個人主頁優化 (歸檔員自用)
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.9_2025-7-2
+// @version      v1.10_2025-7-13
 // @description  Bili 個人主頁優化.
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -375,6 +375,7 @@
     let outputpageitemnum = 0; //也是统计次数
     let outputpagenowtime = null; //该页面创建的时间
     addoutputpage();
+    let hide_new_space_entry_status = false
     //modifyAlbums();
 
     //添加 Outut_page
@@ -517,7 +518,7 @@
         }
 
         await delay(2000);
-        output_page_div.style.visibility = 'visible';
+        //output_page_div.style.visibility = 'visible';
     }
 
     async function addoutputpageitem(){
@@ -543,25 +544,96 @@
                 continue;
             }
 
-            let title = item.querySelector('.bili-dyn-card-video__title');
-            let cover = item.querySelector('.b-img__inner').querySelector('img').src;
-            let time = item.querySelector('.bili-dyn-time').innerText;
-            console.log(title.innerText + '\n' + cover + '\n' + time);
+            let title = item.querySelector('.bili-dyn-card-video__title').innerText; //标题
+            let intro = item.querySelector('.bili-dyn-card-video__desc').innerText; //简介
+            let cover = item.querySelector('.b-img__inner').querySelector('img').src; //封面
+            let bvid = item.querySelector('a.bili-dyn-card-video').href.split('/'); //BV号
+            bvid = bvid[bvid.length - 2];
+            let time = item.querySelector('.bili-dyn-time').innerText; //日期
+            let duration = gettime(item.querySelector('.duration-time').innerText); //时长
+            let playnum = numstr2int(item.querySelector('.bili-dyn-card-video__stat__item').innerText); //播放量
+            let danmaku = numstr2int(item.querySelector('.bili-dyn-card-video__stat__item.danmaku').innerText); //弹幕
+            let comment = numstr2int(item.querySelector('.bili-dyn-action.comment').innerText); //评论
+            let like = numstr2int(item.querySelector('.bili-dyn-action.like').innerText); //点赞
+            let share = numstr2int(item.querySelector('.bili-dyn-action.forward').innerText); //转发
+
+            console.log('[' + bvid + '] ' + title + '\n' + cover + '\n' + intro + '\n' + time + '\t 时长: ' + duration + '\n播放量: ' + playnum + '\t弹幕: ' + danmaku + '\t评论: ' + comment
+                       + '\t点赞: ' + like + '\t转发: ' + share);
         }
         outputpageitemnum = length;
     }
 
+    //获取时间戳的
     function gettime(time){
-        if(outputpagenowtime == null){
+        let output;
+        // HH:MM:SS 转 秒
+        if(time.indexOf(':') != -1){
+            let hhssmm = time.split(':');
+            switch (hhssmm.length){
+                case 2:
+                    output = (Number(hhssmm[0]) * 60) + Number(hhssmm[1]);
+                    break;
+                case 3:
+                    output = (Number(hhssmm[0]) * 3600) + (Number(hhssmm[1]) * 60) + Number(hhssmm[2]);
+                    break;
+            }
+        }
+        //
+        else{
 
         }
-        return;
+        return output;
+    }
+
+    // 万 > 整数
+    function numstr2int(text){
+        let num;
+        if(text.indexOf('万') != -1){
+            text = text.substring(0,text.length - 1);
+            num = parseFloat(text) * 10000
+            /*if(text.indexOf('.') != -1){
+                text = text.split('.');
+                num = (Number(text[0]) * 10000) + (Number(text[1]) * 1000);
+            }
+            else{
+                num = Number(text) * 10000
+            }*/
+            return num;
+        }
+        else if(text.indexOf('亿') != -1){
+            text = text.substring(0,text.length - 1);
+            num = parseFloat(text) * 100000000
+            /*if(text.indexOf('.') != -1){
+                text = text.split('.');
+                num = (Number(text[0]) * 100000000) + (Number(text[1]) * 10000000);
+            }
+            else{
+                num = Number(text) * 100000000
+            }*/
+            return num;
+        }
+        else{
+            return text;
+        }
+    }
+
+    //不喜欢 new-space-entry
+    function hide_new_space_entry(){
+        if(hide_new_space_entry_status == true){
+            return;
+        }
+        let a = document.querySelector('.new-space-entry');
+        if(a != null){
+            a.remove();
+            hide_new_space_entry_status = true;
+        }
     }
 
     //重复运行
     (async function autorun() {
         await modifyAlbums();
         await addoutputpageitem();
+        await hide_new_space_entry(); //隐藏 "体验新版" btn
         setTimeout(autorun, 1000);
     })();
 

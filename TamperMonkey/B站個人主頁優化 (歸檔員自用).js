@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站個人主頁優化 (歸檔員自用)
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.10_2025-7-13
+// @version      v1.11_2025-8-5
 // @description  Bili 個人主頁優化.
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -374,13 +374,14 @@
     var runtimes = 0; //统计次数
     let outputpageitemnum = 0; //也是统计次数
     let outputpagenowtime = null; //该页面创建的时间
+    let hide_new_space_entry_status = false //隐藏 '体验新版' btn
+    let output_page_div; //info 界面父节点
     addoutputpage();
-    let hide_new_space_entry_status = false
     //modifyAlbums();
 
     //添加 Outut_page
     async function addoutputpage(){
-        let output_page_div = document.createElement('div');
+        output_page_div = document.createElement('div');
         output_page_div.innerHTML = `<div class="output_page_background close" style="
     position: fixed;
     top: 0;
@@ -406,8 +407,12 @@
 	     .output_page_btn:hover {
 	         background-color: var(--brand_blue_hover);
 	     }
+	     .output_page_btn.hover {
+	         background-color: var(--brand_blue_hover);
+	     }
 	     .output_page_btn{
 	         background-color: var(--brand_blue);
+             user-select: none;
 	     }
 	     .output_page_btn_esc:hover {
 	         background-color: var(--stress_red_hover);
@@ -422,10 +427,10 @@
 	         border-color: #aaaaaa33;
 	     }
 	     .output_page_background.close{
-	         animation: output_page_close 1s;
+	         animation: output_page_close 0.5s;
 	     }
 	     .output_page_background{
-	         animation: output_page_open 1s;
+	         animation: output_page_open 0.5s;
 	     }
 
 	     @keyframes output_page_close{
@@ -447,18 +452,36 @@
 	    	align-items: center;
 	    	flex-shrink: 0;">
 	    		<span class="output_page_title" style="
-	    		margin: 24px;
-	    		font-size: 2em;">Title</span>
+                overflow: hidden;
+	    		text-overflow:ellipsis;
+	    		white-space:nowrap;
+	    		margin: 18px;
+	    		padding: 6px;
+	    		font-size: 2em;
+	    		flex: 1">Title</span>
 	    		<div style="
-	    		position: absolute;
-	    		right: 24px;">
-	    			<button class="output_page_btn output_page_btn_cover" style="
-	    			font-size: 1em;
-	    			color: white;
-	    			padding: 6px 16px;
-	    			border-style: none;
-	    			border-radius: 4px;
-	    			transition: background-color 0.5s;">封面</button>
+                user-select: none;
+	    		margin-right: 24px;">
+	    			<div style="
+                    position: relative;
+                    overflow: hidden;
+                    display: inline-flex;" title="拖拽复制封面.">
+                        <button class="output_page_btn output_page_btn_cover" style="
+                        font-size: 1em;
+                        color: white;
+                        padding: 6px 16px;
+                        border-style: none;
+                        border-radius: 4px;
+                        transition: background-color 0.5s;
+                        ">封面</button>
+                        <img class="output_page_btn_cover" src="none" style="
+                        opacity: 0;
+                        position: absolute;
+                        width: 100%;
+                        height: 100%;
+                        inset: 0;
+                        pointer-events: stroke;">
+                    </div>
 	    			<button class="output_page_btn output_page_btn_copy" style="
 	    			margin-left: 12px;
 	    			font-size: 1em;
@@ -506,32 +529,67 @@
         output_page_div.style.visibility = 'hidden';
         document.body.appendChild(output_page_div);
 
+        //关闭事件
         let output_page_btn_esc = output_page_div.querySelector('.output_page_btn_esc');
         let output_page_background = output_page_div.querySelector('.output_page_background');
         output_page_btn_esc.addEventListener('click', function(e){ closeoutputpage(e); } );
         output_page_background.addEventListener('click', function(e){ closeoutputpage(e); } );
-
         function closeoutputpage(e) {
             if(e.target == output_page_background || e.target == output_page_btn_esc){
                 output_page_background.classList.add('close');
             }
         }
 
-        await delay(2000);
+        //那个封面 btn 还要单独做动画
+        let output_page_btn_cover = output_page_div.querySelector('button.output_page_btn_cover');
+        output_page_btn_cover.parentNode.addEventListener('mouseover', () => {
+            output_page_btn_cover.classList.add('hover');
+        });
+        output_page_btn_cover.parentNode.addEventListener('mouseout', () => {
+            output_page_btn_cover.classList.remove('hover');
+        });
+
+        //还是那个封面按钮
+        output_page_btn_cover.parentNode.addEventListener('click', () => {
+            let link = output_page_btn_cover.getAttribute('href');
+            if(link != null){
+                window.open(link, "_blank");
+            }
+        });
+
+        //复制到剪切板
+        let output_page_btn_copy = output_page_div.querySelector('button.output_page_btn_copy');
+        let output_page_text = output_page_div.querySelector('.output_page_text');
+        output_page_btn_copy.parentNode.addEventListener('click', () => {
+            if(output_page_text.value != null){
+                let pos = [output_page_text.selectionStart,output_page_text.selectionEnd];
+                output_page_text.select();
+                document.execCommand('copy');
+                output_page_text.setSelectionRange(pos[0], pos[1]);
+                //output_page_text.blur();
+            }
+        });
+
+
+        //await delay(2000);
         //output_page_div.style.visibility = 'visible';
     }
 
     async function addoutputpageitem(){
+        //获取该页面创建时间
         if(window.location.href.indexOf('file://') != -1 && outputpagenowtime == null){
             let localinfo = document.querySelector('meta[id="localinfo"]');
             if(localinfo != -1){
-                outputpagenowtime = localinfo.getAttribute('localdate');
+                outputpagenowtime = new Date(localinfo.getAttribute('localdate'));
                 console.log(outputpagenowtime);
             }
             else{
-
+                outputpagenowtime = new Date();
                 return;
             }
+        }
+        else if(outputpagenowtime == null){
+            outputpagenowtime = new Date();
         }
 
         let items = document.querySelectorAll('.bili-dyn-list__item');
@@ -545,7 +603,13 @@
             }
 
             let title = item.querySelector('.bili-dyn-card-video__title').innerText; //标题
-            let intro = item.querySelector('.bili-dyn-card-video__desc').innerText; //简介
+            let intro = item.querySelector('.bili-dyn-card-video__desc'); //简介
+            if(intro == null){
+                intro = '-';
+            }
+            else{
+                intro = intro.innerText;
+            }
             let cover = item.querySelector('.b-img__inner').querySelector('img').src; //封面
             let bvid = item.querySelector('a.bili-dyn-card-video').href.split('/'); //BV号
             bvid = bvid[bvid.length - 2];
@@ -557,8 +621,17 @@
             let like = numstr2int(item.querySelector('.bili-dyn-action.like').innerText); //点赞
             let share = numstr2int(item.querySelector('.bili-dyn-action.forward').innerText); //转发
 
-            console.log('[' + bvid + '] ' + title + '\n' + cover + '\n' + intro + '\n' + time + '\t 时长: ' + duration + '\n播放量: ' + playnum + '\t弹幕: ' + danmaku + '\t评论: ' + comment
-                       + '\t点赞: ' + like + '\t转发: ' + share);
+            console.log('[' + bvid + '] ' + title + '\n' + cover + '\n' + intro + '\n[' + gettime(time) + ']\t' + time + '\t 时长: ' + duration + '\n播放量: ' + playnum + '\t弹幕: ' + danmaku
+                       + '\t评论: ' + comment + '\t点赞: ' + like + '\t转发: ' + share);
+
+            let morebtn_dom = item.querySelector('div.tp.bili-dyn-more__btn'); //选单父控件
+            morebtn_dom.addEventListener('mousemove', () => {
+                if(morebtn_dom.getAttribute('fixed') != 'true'){
+                    morebtn_dom.setAttribute('fixed', 'true')
+                    let options_dom = item.querySelector('div.bili-cascader-options'); //选单
+                    createinfobtn(options_dom, [title, intro, cover, bvid, time.substring(0,time.indexOf(' ')), duration, playnum, danmaku, comment, like, share]);
+                }
+            });
         }
         outputpageitemnum = length;
     }
@@ -577,12 +650,49 @@
                     output = (Number(hhssmm[0]) * 3600) + (Number(hhssmm[1]) * 60) + Number(hhssmm[2]);
                     break;
             }
+            return output;
         }
-        //
-        else{
 
+        // 日期转毫秒
+        let now = outputpagenowtime;
+        if(time.indexOf("刚刚") != -1){
+            time = now.valueOf()
         }
-        return output;
+        else if(time.indexOf("秒") != -1){
+            time = now.valueOf() - (time.substring(0,time.indexOf("秒")) * 1000);
+        }
+        else if(time.indexOf("分钟") != -1){
+            time = now.valueOf() - (time.substring(0,time.indexOf("分钟")) * 60 * 1000);
+        }
+        else if(time.indexOf("小时") != -1){
+            time = now.valueOf() - (time.substring(0,time.indexOf("小时")) * 60 * 60 * 1000);
+        }
+        else if(time.indexOf("天") != -1){
+            if(time.indexOf("昨天") != -1){
+                time = now.valueOf() - now.getHours() * 60 * 60 * 1000;
+            }
+            else if(time.indexOf("前天") != -1){
+                time = now.valueOf() - (now.getHours() * 60 * 60 * 1000) + 86400000;
+            }
+            else{
+                time = now.valueOf() - (now.getHours() * 60 * 60 * 1000) + time.substring(0,time.indexOf("天")) * 86400000;
+            }
+        }
+        else{
+            time = time.replace(/\//g, "-");
+            time = time.replace(/年/g, "-");
+            time = time.replace(/月/g, "-");
+            //time = time.replace(/日/g, "");
+            if(time.indexOf("日") != -1){
+                time = time.substring(0,time.indexOf("日"))
+            }
+            if((time.split("-").length - 1) == 1){
+                time = now.getFullYear() + "-" +time;
+            }
+            let temptime = new Date(time);
+            time = temptime.valueOf();
+        }
+        return time;
     }
 
     // 万 > 整数
@@ -627,6 +737,72 @@
             a.remove();
             hide_new_space_entry_status = true;
         }
+    }
+
+    //创建 info 选单
+    function createinfobtn(dom,data){
+        //data: 标题, 简介, 封面, BVID, 日期, 时长, 播放量, 弹幕, 评论, 点赞, 转发
+        let item_div = document.createElement('div');
+        item_div.innerHTML = `<div class="bili-cascader-options__item"><div class="bili-cascader-options__item-custom"><div><div class="bili-cascader-options__item-label">信息</div></div></div></div>`
+
+        //点击事件
+        item_div.addEventListener("click", () => {
+            if(output_page_div == null){
+                output_page_div = document.querySelector('.output_page_background').parentNode;
+            }
+
+            output_page_div.style.visibility = 'visible';
+            let output_page = output_page_div.querySelector('.output_page_background');
+            let page_title = output_page.querySelector('.output_page_title');
+            page_title.innerText = data[0]; //标题
+            page_title.title = data[0];
+            let output_page_btn_cover_img = output_page_div.querySelector('img.output_page_btn_cover');
+            let output_page_btn_cover_btn = output_page_div.querySelector('button.output_page_btn_cover');
+            output_page_btn_cover_img.src = data[2]; //封面
+            output_page_btn_cover_btn.setAttribute('href', data[2]);
+            let output_text = `{
+                "id": <AV号>,
+                "type": 2,
+                "title": "<标题>",
+                "cover": "<封面>",
+                "intro": "<简介>",
+                "page": <分P数>,
+                "duration": <时长, 单位: 秒>,
+                "upper": {
+                    "mid": <UID>,
+                    "name": "<用户ID>",
+                    "face": "<用户头像URL>"
+                },
+                "attr": 9,
+                "cnt_info": {
+                    "collect": <收藏数>,
+                    "play": <播放量>,
+                    "danmaku": <弹幕量>,
+                    "vt": 0,
+                    "play_switch": 0,
+                    "reply": <评论数>,
+                    "view_text_1": "<简写播放量>"
+                },
+                "link": "bilibili://video/<AV号>",
+                "ctime": <创建时间>,
+                "pubtime": <过审时间>,
+                "fav_time": <收藏时间>,
+                "bv_id": "<BV号>",
+                "bvid": "<BV号>",
+                "season": null,
+                "ogv": null,
+                "ugc": {
+                    "first_cid": <CID号>
+                },
+                "media_list_link": ""
+            },`;
+            let output_page_text = output_page.querySelector('.output_page_text');
+            output_page_text.value = output_text;
+
+            output_page.classList.remove('close');
+        });
+
+        dom.appendChild(item_div);
     }
 
     //重复运行

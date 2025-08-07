@@ -595,6 +595,7 @@
         let items = document.querySelectorAll('.bili-dyn-list__item');
         let num = outputpageitemnum;
         let length = items.length; //真怕哪天会抽风
+        console.log(length);
         for(let num1 = num; num1 < length; num1++){ //遍历循环每个动态
             let item = items[num1];
             let dyn_time = item.querySelector('.bili-dyn-time');
@@ -613,6 +614,7 @@
             let cover = item.querySelector('.b-img__inner').querySelector('img').src; //封面
             let bvid = item.querySelector('a.bili-dyn-card-video').href.split('/'); //BV号
             bvid = bvid[bvid.length - 2];
+            let aid = bv2av(bvid);
             let time = item.querySelector('.bili-dyn-time').innerText; //日期
             let duration = gettime(item.querySelector('.duration-time').innerText); //时长
             let playnum = numstr2int(item.querySelector('.bili-dyn-card-video__stat__item').innerText); //播放量
@@ -621,15 +623,15 @@
             let like = numstr2int(item.querySelector('.bili-dyn-action.like').innerText); //点赞
             let share = numstr2int(item.querySelector('.bili-dyn-action.forward').innerText); //转发
 
-            console.log('[' + bvid + '] ' + title + '\n' + cover + '\n' + intro + '\n[' + gettime(time) + ']\t' + time + '\t 时长: ' + duration + '\n播放量: ' + playnum + '\t弹幕: ' + danmaku
-                       + '\t评论: ' + comment + '\t点赞: ' + like + '\t转发: ' + share);
+            console.log('[' + bvid + '|' + aid + '] ' + title + '\n' + cover + '\n' + intro + '\n[' + gettime(time) + ']\t' + time + '\t 时长: ' + duration + '\n播放量: ' + playnum + '\t弹幕: ' +
+                        danmaku + '\t评论: ' + comment + '\t点赞: ' + like + '\t转发: ' + share);
 
             let morebtn_dom = item.querySelector('div.tp.bili-dyn-more__btn'); //选单父控件
             morebtn_dom.addEventListener('mousemove', () => {
                 if(morebtn_dom.getAttribute('fixed') != 'true'){
                     morebtn_dom.setAttribute('fixed', 'true')
                     let options_dom = item.querySelector('div.bili-cascader-options'); //选单
-                    createinfobtn(options_dom, [title, intro, cover, bvid, time.substring(0,time.indexOf(' ')), duration, playnum, danmaku, comment, like, share]);
+                    createinfobtn(options_dom, [title, intro, cover, bvid, aid, time.substring(0,time.indexOf(' ')), duration, playnum, danmaku, comment, like, share]);
                 }
             });
         }
@@ -741,7 +743,7 @@
 
     //创建 info 选单
     function createinfobtn(dom,data){
-        //data: 标题, 简介, 封面, BVID, 日期, 时长, 播放量, 弹幕, 评论, 点赞, 转发
+        //data: 标题, 简介, 封面, BVID, AVID, 日期, 时长, 播放量, 弹幕, 评论, 点赞, 转发
         let item_div = document.createElement('div');
         item_div.innerHTML = `<div class="bili-cascader-options__item"><div class="bili-cascader-options__item-custom"><div><div class="bili-cascader-options__item-label">信息</div></div></div></div>`
 
@@ -812,5 +814,132 @@
         await hide_new_space_entry(); //隐藏 "体验新版" btn
         setTimeout(autorun, 1000);
     })();
+
+    //BV转AV
+    function bv2av(bvid){
+        if(bvid == null || bvid.length < 10 || bvid.length == 11 || bvid.length > 12){
+            //console.log('无效的BVID');
+            return null;
+        }
+        else if(bvid.length == 12){
+            bvid = bvid.substring(2);
+        }
+        //let temp = new Array(10); //存储十个数
+        /*let temp = bvid[2];
+        bvid[2] = bvid[8];
+        bvid[8] = temp;
+        temp = bvid[3];
+        bvid[3] = bvid[6];
+        bvid[6] = temp;
+        temp = 0n;*/
+        let temp = 0n;
+        let bv = [bvid[7],bvid[5],bvid[3],bvid[4],bvid[2],bvid[6],bvid[1],bvid[8],bvid[9]];
+        //console.log(bv);
+
+        /*for(let t = 0 ; t < 10 ; t++){
+            //temp[t] = (bvdictionary[bvid[t]] * (58 ** bv58pow[t]) );
+            temp = temp + BigInt(BigInt(bvdictionary[bvid[t]]) * BigInt(58n ** BigInt(bv58pow[t])) );
+            //console.log(temp[t]);
+        }
+        //console.log(temp);
+        temp = temp - 100618342136696320n;*/
+        /*temp = BigInt(bvdictionary[bvid[1]]) * 58n ** 2n + BigInt(bvdictionary[bvid[2]]) * 58n ** 4n + BigInt(bvdictionary[bvid[4]]) * 58n ** 5n + BigInt(bvdictionary[bvid[6]]) * 58n ** 3n +
+            BigInt(bvdictionary[bvid[8]]) * 58n + BigInt(bvdictionary[bvid[9]]);
+        temp = temp - 8728348608n;*/
+        for(let t of bv){
+            temp = temp * 58n + BigInt(57 - bvdictionary[t]);
+        }
+
+        //二进制转换
+        //console.log(temp);
+        /*let temp2 = temp;
+        temp = '';
+        while (temp2 != 0){
+            temp2 = temp2 / 2;
+            if(String(temp2).indexOf('.') != -1){
+                temp = temp + '1';
+                temp2 = parseInt(temp2);
+            }
+            else{
+                temp = temp + '0';
+            }
+        }*/
+        temp = temp.toString(2);
+        //let xor = '1010100100111011001100100100';
+        //let xor = 177451812n.toString(2);
+        //按位与运算
+        let xor = (2n ** 51n - 1n).toString(2);
+        if(xor.length < temp.length){ //长度不够就补零
+            while(xor.length < temp.length){
+                xor = '0' + xor;
+            }
+        }
+        else if(xor.length > temp.length){ //长度不够就补零
+            while(xor.length > temp.length){
+                temp = '0' + temp;
+            }
+        }
+        //console.log(temp);
+        //console.log(xor);
+        let temp2 = '';
+        for(let tt = 0 ; tt < temp.length ; tt++){
+            switch ( Number(xor[tt]) + Number(temp[tt]) ){
+                case 2:
+                    temp2 = temp2 + 1;
+                    break;
+                default:
+                    temp2 = temp2 + 0;
+                    break;
+            }
+        }
+
+        //异或运算
+        temp = temp2;
+        xor = 23442827791579n.toString(2);
+        if(xor.length < temp.length){ //长度不够就补零
+            while(xor.length < temp.length){
+                xor = '0' + xor;
+            }
+        }
+        //console.log(temp);
+        //console.log(xor);
+        temp2 = '';
+        for(let tt = 0 ; tt < temp.length ; tt++){
+            switch ( Number(xor[tt]) + Number(temp[tt]) ){
+                case 2:
+                    temp2 = temp2 + 0;
+                    break;
+                case 1:
+                    temp2 = temp2 + 1;
+                    break;
+                case 0:
+                    temp2 = temp2 + 0;
+                    break;
+            }
+        }
+        //console.log(temp2);
+        //console.log(parseInt(temp2,2));
+        return parseInt(temp2,2);
+    }
+
+    //字典
+    let bvdictionary = {
+        '1':13,'2':12,'3':46,'4':31,'5':43,'6':18,'7':40,'8':28,'9':5,'A':54,'B':20,'C':15,'D':8,'E':39,'F':57,'G':45,'H':36,'J':38,'K':51,
+        'L':42,'M':49,'N':52,'P':53,'Q':7,'R':4,'S':9,'T':50,'U':10,'V':44,'W':34,'X':6,'Y':25,'Z':1,'a':26,'b':29,'c':56,'d':3,'e':24,'f':0,
+        'g':47,'h':27,'i':22,'j':41,'k':16,'m':11,'n':37,'o':2,'p':35,'q':21,'r':17,'s':33,'t':30,'u':48,'v':23,'w':55,'x':32,'y':14,'z':19
+    };
+    let bv58pow = [6,2,4,8,5,9,3,7,1,0];
+    /*let bvdictionary = {
+        '1':'31', '2':'12', '3':'46', '4':'31', '5':'43', '6':'18', '7':'40', '8':'28', '9':'5', 'A':'54', 'B':'20', 'C':'15', 'D':'8', 'E':'39', 'F':'57', 'G':'45', 'H':'36', 'J':'38', 'K':'51',
+        'L':'42', 'M':'49', 'N':'52', 'P':'53', 'Q':'7', 'R':'4', 'S':'9', 'T':'50', 'U':'10', 'V':'44', 'W':'34', 'X':'6', 'Y':'25', 'Z':'1', 'a':'26', 'b':'29', 'c':'56', 'd':'3', 'e':'24', 'f':'0',
+        'g':'47', 'h':'27', 'i':'22', 'j':'41', 'k':'16', 'm':'11', 'n':'37', 'o':'2', 'p':'35', 'q':'21', 'r':'17', 's':'33', 't':'30', 'u':'48', 'v':'23', 'w':'55', 'x':'32', 'y':'14', 'z':'19'
+    };*/
+
+    window.bv2av = bv2av;
+
+    //URL 变化时, 重置计数
+    window.addEventListener('hashchange', () => {
+        outputpageitemnum = 0;
+    });
 
 })();

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站個人主頁優化 (歸檔員自用)
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.11_2025-8-5
+// @version      v1.12_2025-8-7
 // @description  Bili 個人主頁優化.
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -379,6 +379,16 @@
     addoutputpage();
     //modifyAlbums();
 
+    //去除 @ 后面的
+    function delat(text){
+        if(text.indexOf('@') != -1){
+            return text.substring(0,text.indexOf('@'));
+        }
+        else{
+            return text;
+        }
+    }
+
     //添加 Outut_page
     async function addoutputpage(){
         output_page_div = document.createElement('div');
@@ -409,6 +419,12 @@
 	     }
 	     .output_page_btn.hover {
 	         background-color: var(--brand_blue_hover);
+	     }
+	     .output_page_btn.ok:hover {
+	         background-color: var(--Gr4);
+	     }
+	     .output_page_btn.ok {
+	         background-color: var(--success_green);
 	     }
 	     .output_page_btn{
 	         background-color: var(--brand_blue);
@@ -465,7 +481,7 @@
 	    			<div style="
                     position: relative;
                     overflow: hidden;
-                    display: inline-flex;" title="拖拽复制封面.">
+                    display: inline-flex;" title="拖拽以复制封面.">
                         <button class="output_page_btn output_page_btn_cover" style="
                         font-size: 1em;
                         color: white;
@@ -521,24 +537,13 @@
 	    		box-sizing: border-box;
 	    		resize: none;
 	    		line-height: 1.2em;
-	    		transition: border-color 0.5s;"></textarea>
+	    		transition: border-color 0.5s;" readonly></textarea>
 	    	</div>
 		</div>
 	</div>
 </div>`;
         output_page_div.style.visibility = 'hidden';
         document.body.appendChild(output_page_div);
-
-        //关闭事件
-        let output_page_btn_esc = output_page_div.querySelector('.output_page_btn_esc');
-        let output_page_background = output_page_div.querySelector('.output_page_background');
-        output_page_btn_esc.addEventListener('click', function(e){ closeoutputpage(e); } );
-        output_page_background.addEventListener('click', function(e){ closeoutputpage(e); } );
-        function closeoutputpage(e) {
-            if(e.target == output_page_background || e.target == output_page_btn_esc){
-                output_page_background.classList.add('close');
-            }
-        }
 
         //那个封面 btn 还要单独做动画
         let output_page_btn_cover = output_page_div.querySelector('button.output_page_btn_cover');
@@ -567,9 +572,23 @@
                 document.execCommand('copy');
                 output_page_text.setSelectionRange(pos[0], pos[1]);
                 //output_page_text.blur();
+                output_page_btn_copy.classList.add('ok');
+                output_page_btn_copy.innerText = '完成';
             }
         });
 
+        //关闭事件
+        let output_page_btn_esc = output_page_div.querySelector('.output_page_btn_esc');
+        let output_page_background = output_page_div.querySelector('.output_page_background');
+        output_page_btn_esc.addEventListener('click', function(e){ closeoutputpage(e); } );
+        output_page_background.addEventListener('click', function(e){ closeoutputpage(e); } );
+        function closeoutputpage(e) {
+            if(e.target == output_page_background || e.target == output_page_btn_esc){
+                output_page_background.classList.add('close');
+                output_page_btn_copy.classList.remove('ok');
+                output_page_btn_copy.innerText = '复制';
+            }
+        }
 
         //await delay(2000);
         //output_page_div.style.visibility = 'visible';
@@ -595,7 +614,6 @@
         let items = document.querySelectorAll('.bili-dyn-list__item');
         let num = outputpageitemnum;
         let length = items.length; //真怕哪天会抽风
-        console.log(length);
         for(let num1 = num; num1 < length; num1++){ //遍历循环每个动态
             let item = items[num1];
             let dyn_time = item.querySelector('.bili-dyn-time');
@@ -611,27 +629,31 @@
             else{
                 intro = intro.innerText;
             }
-            let cover = item.querySelector('.b-img__inner').querySelector('img').src; //封面
+            let cover = delat(item.querySelector('.b-img__inner').querySelector('img').src); //封面
             let bvid = item.querySelector('a.bili-dyn-card-video').href.split('/'); //BV号
             bvid = bvid[bvid.length - 2];
             let aid = bv2av(bvid);
             let time = item.querySelector('.bili-dyn-time').innerText; //日期
             let duration = gettime(item.querySelector('.duration-time').innerText); //时长
-            let playnum = numstr2int(item.querySelector('.bili-dyn-card-video__stat__item').innerText); //播放量
+            let playnum = item.querySelector('.bili-dyn-card-video__stat__item').innerText; //简写播放量
+            let playnumfull = numstr2int(item.querySelector('.bili-dyn-card-video__stat__item').innerText); //播放量
             let danmaku = numstr2int(item.querySelector('.bili-dyn-card-video__stat__item.danmaku').innerText); //弹幕
             let comment = numstr2int(item.querySelector('.bili-dyn-action.comment').innerText); //评论
             let like = numstr2int(item.querySelector('.bili-dyn-action.like').innerText); //点赞
             let share = numstr2int(item.querySelector('.bili-dyn-action.forward').innerText); //转发
+            let useruid = document.URL.split('/')[3]; //用户UID
+            let username = document.querySelector('span[id="h-name"]').innerText; //用户ID
+            let usericon = delat(document.querySelector('div.h-user').querySelector('img.bili-avatar-face').src); //用户头像
 
-            console.log('[' + bvid + '|' + aid + '] ' + title + '\n' + cover + '\n' + intro + '\n[' + gettime(time) + ']\t' + time + '\t 时长: ' + duration + '\n播放量: ' + playnum + '\t弹幕: ' +
-                        danmaku + '\t评论: ' + comment + '\t点赞: ' + like + '\t转发: ' + share);
+            //console.log('[' + bvid + '|AV' + aid + '] ' + title + '\n' + cover + '\n' + intro + '\n[' + gettime(time) + ']\t' + time + '\t 时长: ' + duration + '\n播放量: ' + playnumfull + '\t弹幕: ' +
+            //            danmaku + '\t评论: ' + comment + '\t点赞: ' + like + '\t转发: ' + share);
 
             let morebtn_dom = item.querySelector('div.tp.bili-dyn-more__btn'); //选单父控件
             morebtn_dom.addEventListener('mousemove', () => {
                 if(morebtn_dom.getAttribute('fixed') != 'true'){
                     morebtn_dom.setAttribute('fixed', 'true')
                     let options_dom = item.querySelector('div.bili-cascader-options'); //选单
-                    createinfobtn(options_dom, [title, intro, cover, bvid, aid, time.substring(0,time.indexOf(' ')), duration, playnum, danmaku, comment, like, share]);
+                    createinfobtn(options_dom, [title, intro, cover, bvid, aid, time.substring(0,time.indexOf(' ')), duration, playnum, playnumfull, danmaku, comment, like, share, useruid, username, usericon]);
                 }
             });
         }
@@ -743,7 +765,7 @@
 
     //创建 info 选单
     function createinfobtn(dom,data){
-        //data: 标题, 简介, 封面, BVID, AVID, 日期, 时长, 播放量, 弹幕, 评论, 点赞, 转发
+        //data: 标题, 简介, 封面, BVID, AVID, 日期, 时长, 简写播放量, 播放量, 弹幕, 评论, 点赞, 转发, UID, 昵称, 头像
         let item_div = document.createElement('div');
         item_div.innerHTML = `<div class="bili-cascader-options__item"><div class="bili-cascader-options__item-custom"><div><div class="bili-cascader-options__item-label">信息</div></div></div></div>`
 
@@ -763,42 +785,47 @@
             output_page_btn_cover_img.src = data[2]; //封面
             output_page_btn_cover_btn.setAttribute('href', data[2]);
             let output_text = `{
-                "id": <AV号>,
+                "id": ${data[4]},
                 "type": 2,
-                "title": "<标题>",
-                "cover": "<封面>",
-                "intro": "<简介>",
-                "page": <分P数>,
-                "duration": <时长, 单位: 秒>,
+                "title": "${data[0]}",
+                "cover": "${data[2]}",
+                "intro": "${data[1]}",
+                "page": -1,
+                "duration": ${data[6]},
                 "upper": {
-                    "mid": <UID>,
-                    "name": "<用户ID>",
-                    "face": "<用户头像URL>"
+                    "mid": ${data[13]},
+                    "name": "${data[14]}",
+                    "face": "${data[15]}"
                 },
-                "attr": 9,
+                "attr": 0,
                 "cnt_info": {
-                    "collect": <收藏数>,
-                    "play": <播放量>,
-                    "danmaku": <弹幕量>,
+                    "collect": -1,
+                    "play": ${data[8]},
+                    "danmaku": ${data[9]},
                     "vt": 0,
                     "play_switch": 0,
-                    "reply": <评论数>,
-                    "view_text_1": "<简写播放量>"
+                    "reply": ${data[10]},
+                    "like": ${data[11]},
+                    "share": ${data[12]},
+                    "view_text_1": "${data[7]}"
                 },
-                "link": "bilibili://video/<AV号>",
-                "ctime": <创建时间>,
-                "pubtime": <过审时间>,
-                "fav_time": <收藏时间>,
-                "bv_id": "<BV号>",
-                "bvid": "<BV号>",
+                "link": "bilibili://video/${data[4]}",
+                "ctime": ${gettime(data[5])},
+                "pubtime": ${gettime(data[5])},
+                "fav_time": -1,
+                "bv_id": "${data[3]}",
+                "bvid": "${data[3]}",
                 "season": null,
                 "ogv": null,
                 "ugc": {
-                    "first_cid": <CID号>
+                    "first_cid": -1
                 },
                 "media_list_link": ""
             },`;
             let output_page_text = output_page.querySelector('.output_page_text');
+            output_page_text.value = ''; //取消选择, 曲线救国 2333
+            output_page_text.setSelectionRange(0,0)
+
             output_page_text.value = output_text;
 
             output_page.classList.remove('close');
@@ -941,5 +968,35 @@
     window.addEventListener('hashchange', () => {
         outputpageitemnum = 0;
     });
+
+    //监听键盘输入
+    document.addEventListener('keydown', (e) => { //Ctrl + S
+        if(e.ctrlKey && e.keyCode === 83){
+            output_page_div.style.visibility = 'hidden';
+            output_page_div.querySelector('.output_page_background').classList.add('close');
+            output_page_div.querySelector('.output_page_btn_copy').classList.remove('ok');
+            output_page_div.querySelector('.output_page_btn_copy').innerText = '复制';
+        }
+        else if(e.keyCode === 27){ //Esc
+            //output_page_div.style.visibility = 'hidden';
+            output_page_div.querySelector('.output_page_background').classList.add('close');
+            output_page_div.querySelector('.output_page_btn_copy').classList.remove('ok');
+            output_page_div.querySelector('.output_page_btn_copy').innerText = '复制';
+        }
+        else if(e.ctrlKey && e.keyCode === 67 && output_page_div.querySelector('.output_page_background').getAttribute('class').indexOf('close') == -1 &&
+                output_page_div.querySelector('.output_page_text') != document.activeElement){ //Ctrl + C
+            let output_page_btn_copy = output_page_div.querySelector('button.output_page_btn_copy');
+            let output_page_text = output_page_div.querySelector('.output_page_text');
+            if(output_page_text.value != null){
+                let pos = [output_page_text.selectionStart,output_page_text.selectionEnd];
+                output_page_text.select();
+                document.execCommand('copy');
+                output_page_text.setSelectionRange(pos[0], pos[1]);
+                //output_page_text.blur();
+                output_page_btn_copy.classList.add('ok');
+                output_page_btn_copy.innerText = '完成';
+            }
+        }
+    }, false);
 
 })();

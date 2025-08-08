@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站個人主頁優化 (歸檔員自用)
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.12_2025-8-7
+// @version      v1.13_2025-8-8
 // @description  Bili 個人主頁優化.
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -14,6 +14,8 @@
 
 (function() {
     'use strict';
+
+    window.debug_space = false;
 
     //这是延时
     function delay(ms) {
@@ -253,12 +255,12 @@
 
         // 创建预览布局的函数
         function createPreviewLayout(parent, images, gridType, style_div) {
-        if(runtimes == 0)
+        if(runtimes == 0 && window.debug_space == true)
         {
             console.log("===========================================================================");
         }
         runtimes = runtimes + 1
-        console.log("No." + runtimes + "  Style: " + style_div);
+        if(window.debug_space == true){ console.log("No." + runtimes + "  Style: " + style_div); }
         const previewWrapper = document.createElement('div');
         previewWrapper.className = `bili-album__preview grid${gridType}`;
 
@@ -282,7 +284,7 @@
                 imgraw = parent2.src
             }
             imgPack.push(imgraw);
-            console.log("第 " + i + " 张图片: " + imgPack[i]);
+            if(window.debug_space == true){ console.log("第 " + i + " 张图片: " + imgPack[i]); }
 
             //图片点击放大事件
             function zoomimg(here){
@@ -363,8 +365,8 @@
         else{
             parent.appendChild(previewWrapper);
         }
-        console.log("总计 " + imgPack.length + " 张图片");
-        console.log("===========================================================================");
+        if(window.debug_space == true){ console.log("总计 " + imgPack.length + " 张图片"); }
+        if(window.debug_space == true){ console.log("==========================================================================="); }
         //return imgPack;
     }
 
@@ -376,6 +378,7 @@
     let outputpagenowtime = null; //该页面创建的时间
     let hide_new_space_entry_status = false //隐藏 '体验新版' btn
     let output_page_div; //info 界面父节点
+    let topbarsize = 20; //默认顶栏尺寸
     addoutputpage();
     //modifyAlbums();
 
@@ -448,6 +451,9 @@
 	     .output_page_background{
 	         animation: output_page_open 0.5s;
 	     }
+         .output_page_title::-webkit-scrollbar{
+             display: none;
+         }
 
 	     @keyframes output_page_close{
 	         0% {opacity: 1; display: block;}
@@ -466,15 +472,38 @@
 	    	display: flex;
 	    	flex-direction: row;
 	    	align-items: center;
-	    	flex-shrink: 0;">
-	    		<span class="output_page_title" style="
+	    	flex-shrink: 0;
+            margin: 2px 0px;">
+                <div style="flex: 1;
+                margin: 0px;
+                padding: 24px 12px 24px 24px;
+                container-type: inline-size;
                 overflow: hidden;
-	    		text-overflow:ellipsis;
-	    		white-space:nowrap;
-	    		margin: 18px;
-	    		padding: 6px;
-	    		font-size: 2em;
-	    		flex: 1">Title</span>
+                box-shadow: inset 0px 0px 12px 0px #fff;
+                border-radius: 8px;">
+                    <span class="output_page_title" style="
+                    /*overflow: scroll;
+	    		    text-overflow:ellipsis;
+	    		    white-space:nowrap;*/
+                    line-height: 1;
+	    		    /*margin: 18px;
+	    		    padding: 6px;*/
+                    display: flex;
+	    		    font-size: 1.45em;
+                    width: 100%;
+                    height: 20px;
+                    transition: font-size 0.5s;
+                    align-items: center;">Title</span>
+                    <span class="output_page_title_hidden" style="
+                    overflow: scroll;
+                    line-height: 1;
+                    display: block;
+	    		    font-size: 1.45em;
+                    width: 100%;
+                    max-height: 20px;
+                    position: absolute;
+                    top: -100vh;">Title</span>
+                </div>
 	    		<div style="
                 user-select: none;
 	    		margin-right: 24px;">
@@ -645,8 +674,10 @@
             let username = document.querySelector('span[id="h-name"]').innerText; //用户ID
             let usericon = delat(document.querySelector('div.h-user').querySelector('img.bili-avatar-face').src); //用户头像
 
-            //console.log('[' + bvid + '|AV' + aid + '] ' + title + '\n' + cover + '\n' + intro + '\n[' + gettime(time) + ']\t' + time + '\t 时长: ' + duration + '\n播放量: ' + playnumfull + '\t弹幕: ' +
-            //            danmaku + '\t评论: ' + comment + '\t点赞: ' + like + '\t转发: ' + share);
+            if(window.debug_space == true){
+                console.log('[' + bvid + '|AV' + aid + '] ' + title + '\n' + cover + '\n' + intro + '\n[' + gettime(time) + ']\t' + time + '\t 时长: ' + duration + '\n播放量: ' + playnumfull + '\t弹幕: ' +
+                            danmaku + '\t评论: ' + comment + '\t点赞: ' + like + '\t转发: ' + share);
+            }
 
             let morebtn_dom = item.querySelector('div.tp.bili-dyn-more__btn'); //选单父控件
             morebtn_dom.addEventListener('mousemove', () => {
@@ -775,11 +806,13 @@
                 output_page_div = document.querySelector('.output_page_background').parentNode;
             }
 
-            output_page_div.style.visibility = 'visible';
             let output_page = output_page_div.querySelector('.output_page_background');
             let page_title = output_page.querySelector('.output_page_title');
             page_title.innerText = data[0]; //标题
             page_title.title = data[0];
+            output_page_div.querySelector('.output_page_title_hidden').innerText = data[0];
+            fixfontsize(output_page_div.querySelector('.output_page_title_hidden'), output_page_div.querySelector('.output_page_title'), topbarsize);
+
             let output_page_btn_cover_img = output_page_div.querySelector('img.output_page_btn_cover');
             let output_page_btn_cover_btn = output_page_div.querySelector('button.output_page_btn_cover');
             output_page_btn_cover_img.src = data[2]; //封面
@@ -828,6 +861,7 @@
 
             output_page_text.value = output_text;
 
+            output_page_div.style.visibility = 'visible';
             output_page.classList.remove('close');
         });
 
@@ -983,7 +1017,7 @@
             output_page_div.querySelector('.output_page_btn_copy').classList.remove('ok');
             output_page_div.querySelector('.output_page_btn_copy').innerText = '复制';
         }
-        else if(e.ctrlKey && e.keyCode === 67 && output_page_div.querySelector('.output_page_background').getAttribute('class').indexOf('close') == -1 &&
+        else if(e.ctrlKey && e.shiftKey == false && e.keyCode === 67 && output_page_div.querySelector('.output_page_background').getAttribute('class').indexOf('close') == -1 &&
                 output_page_div.querySelector('.output_page_text') != document.activeElement){ //Ctrl + C
             let output_page_btn_copy = output_page_div.querySelector('button.output_page_btn_copy');
             let output_page_text = output_page_div.querySelector('.output_page_text');
@@ -998,5 +1032,58 @@
             }
         }
     }, false);
+
+    //自适应字体大小
+    let fixfontsizerunning = false;
+    async function fixfontsize (hiddendom, dom, size = 20, num = 0.05){ //操纵对象; 目标对象; 目标值; 累加常量.
+        if(fixfontsizerunning != false || dom == null || hiddendom == null){
+            return;
+        }
+        else{
+            fixfontsizerunning = true;
+            if(output_page_div.querySelector('.output_page_background').getAttribute('class').indexOf('close') != -1){ //等待控件初始化
+                while(output_page_div.querySelector('.output_page_background').getAttribute('class').indexOf('close') != -1){
+                    await delay(10);
+                }
+            }
+            else if(hiddendom.scrollHeight == 0){
+                fixfontsizerunning = false;
+                return;
+            }
+        }
+
+        if(hiddendom.scrollHeight > size){
+            while(hiddendom.scrollHeight > size){
+                hiddendom.style.fontSize = Number(hiddendom.style.fontSize.substring(0,hiddendom.style.fontSize.indexOf('em'))) - num + 'em';
+                //hiddendom.offsetHeight;
+            }
+            if(hiddendom.scrollHeight < size){ //跳多了就缩回去
+                hiddendom.style.fontSize = Number(hiddendom.style.fontSize.substring(0,hiddendom.style.fontSize.indexOf('em'))) + num + 'em';
+            }
+        }
+        else if(hiddendom.scrollHeight < size){
+            while(hiddendom.scrollHeight < size){
+                hiddendom.style.fontSize = Number(hiddendom.style.fontSize.substring(0,hiddendom.style.fontSize.indexOf('em'))) + num + 'em';
+                //hiddendom.offsetHeight;
+            }
+            if(hiddendom.scrollHeight > size){ //跳多了就缩回去
+                hiddendom.style.fontSize = Number(hiddendom.style.fontSize.substring(0,hiddendom.style.fontSize.indexOf('em'))) - num + 'em';
+            }
+        }
+
+        //await delay(10);
+        dom.style.fontSize = hiddendom.style.fontSize;
+        fixfontsizerunning = false;
+    }
+
+
+    //监听窗体尺寸变化
+    let timer_resize;
+    window.addEventListener('resize', () => {
+        clearTimeout(timer_resize);
+        timer_resize = setTimeout( () => { fixfontsize(output_page_div.querySelector('.output_page_title_hidden'), output_page_div.querySelector('.output_page_title'), topbarsize); } , 10);
+    }, false);
+
+    window.fixfontsize = fixfontsize;
 
 })();

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站個人主頁優化 (歸檔員自用)
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.13_2025-8-8
+// @version      v1.14_2025-8-8
 // @description  Bili 個人主頁優化.
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -996,7 +996,117 @@
         'g':'47', 'h':'27', 'i':'22', 'j':'41', 'k':'16', 'm':'11', 'n':'37', 'o':'2', 'p':'35', 'q':'21', 'r':'17', 's':'33', 't':'30', 'u':'48', 'v':'23', 'w':'55', 'x':'32', 'y':'14', 'z':'19'
     };*/
 
+    //AV转BV
+    function av2bv(aid){
+        if(aid == null){
+            return null;
+        }
+        if(isNaN(aid) == true && aid.toLowerCase().indexOf('av') != -1){
+            aid = aid.substring(2);
+        }
+        if(isNaN(aid) == true){
+            return null;
+        }
+        let bvid = ['B', 'V', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0'];
+
+        //按位或运算
+        let temp = BigInt(aid).toString(2);
+        let xor = (2n ** 51n).toString(2);
+        if(xor.length < temp.length){ //长度不够就补零
+            while(xor.length < temp.length){
+                xor = '0' + xor;
+            }
+        }
+        else if(xor.length > temp.length){ //长度不够就补零
+            while(xor.length > temp.length){
+                temp = '0' + temp;
+            }
+        }
+        //console.log(temp);
+        //console.log(xor);
+        let temp2 = '';
+        for(let tt = 0 ; tt < temp.length ; tt++){
+            switch ( Number(xor[tt]) + Number(temp[tt]) ){
+                case 0:
+                    temp2 = temp2 + 0;
+                    break;
+                default:
+                    temp2 = temp2 + 1;
+                    break;
+            }
+        }
+
+        //异或运算
+        temp = temp2;
+        xor = 23442827791579n.toString(2);
+        if(xor.length < temp.length){ //长度不够就补零
+            while(xor.length < temp.length){
+                xor = '0' + xor;
+            }
+        }
+        else if(xor.length > temp.length){ //长度不够就补零
+            while(xor.length > temp.length){
+                temp = '0' + temp;
+            }
+        }
+        //console.log(temp);
+        //console.log(xor);
+        temp2 = '';
+        for(let tt = 0 ; tt < temp.length ; tt++){
+            switch ( Number(xor[tt]) + Number(temp[tt]) ){
+                case 2:
+                    temp2 = temp2 + 0;
+                    break;
+                case 1:
+                    temp2 = temp2 + 1;
+                    break;
+                case 0:
+                    temp2 = temp2 + 0;
+                    break;
+            }
+        }
+        temp = BigInt('0b' + temp2);
+        //console.log(temp2);
+        //console.log(temp);
+        temp2 = ''; //暂存 base58 字符
+        let temp3 = 0n;
+
+        //以值求键
+        let keymap = Object.keys(bvdictionary)
+        function readkey(value){
+            let key = null;
+            for(let keys of keymap){
+                if(bvdictionary[keys] === value){
+                    key = keys;
+                    break;
+                }
+            }
+            return key;
+        }
+
+        while(temp > 0){
+            temp3 = temp - 58n * (temp / 58n); //求余数
+            temp = temp / 58n;
+            temp2 = readkey(57 - parseInt(temp3)) + temp2;
+        }
+
+        //console.log(temp2);
+
+        bvid[3] = temp2[6];
+        bvid[4] = temp2[4];
+        bvid[5] = temp2[2];
+        bvid[6] = temp2[3];
+        bvid[7] = temp2[1];
+        bvid[8] = temp2[5];
+        bvid[9] = temp2[0];
+        bvid[10] = temp2[7];
+        bvid[11] = temp2[8];
+
+        return bvid.join('');
+    }
+
     window.bv2av = bv2av;
+    window.av2bv = av2bv;
 
     //URL 变化时, 重置计数
     window.addEventListener('hashchange', () => {

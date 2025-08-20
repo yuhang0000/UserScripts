@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站個人主頁優化 (歸檔員自用)
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.14_2025-8-8
+// @version      v1.15_2025-8-20
 // @description  Bili 個人主頁優化.
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -594,7 +594,7 @@
         //复制到剪切板
         let output_page_btn_copy = output_page_div.querySelector('button.output_page_btn_copy');
         let output_page_text = output_page_div.querySelector('.output_page_text');
-        output_page_btn_copy.parentNode.addEventListener('click', () => {
+        output_page_btn_copy.addEventListener('click', () => {
             if(output_page_text.value != null){
                 let pos = [output_page_text.selectionStart,output_page_text.selectionEnd];
                 output_page_text.select();

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站評論區修復
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.15_2025-7-27
+// @version      v1.16_2025-9-12
 // @description  修复B站视频底下评论区 css 样式表。
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -990,16 +990,34 @@
                 let bili_comment_user_sailing_card = commentbody.querySelector("bili-comment-user-sailing-card");
                 let card = bili_comment_user_sailing_card.shadowRoot.querySelector("div[id='card']");
                 card.setAttribute('style',`width: 288px;height: 48px;position: relative;overflow: hidden;user-select: none;`);
-                let carddiv = card.querySelector("div div");
-                carddiv.setAttribute('style',carddiv.getAttribute('style') +
-                `height: 100%;font-size: 13px;line-height: 16px;display: flex;flex-direction: column;justify-content: center;
-                align-items: flex-start;position: absolute;right: 0px;top: 0px;`);
-                let cardnum = card.querySelector("div div div");
-                if(cardnum != null){
-                    cardnum.setAttribute('style',cardnum.getAttribute('style') +
-                    `height: 100%;font-size: 13px;line-height: 16px;transform: scale(0.7);transform-origin: center center;display: flex;
-                    flex-direction: column;justify-content: center;align-items: flex-start;position: absolute;right: 0px;top: 0px;`);
+                //默認[評論模板是帶有 #ornament 容器的, 但是 .cardBGRoot 並不存在, 僅當解析數據之後才會添加或者移除
+                let cardBGRoot;
+                async function waitcardBGRoot(){
+                    if(card == null){ //上級容器沒了, 説明沒有小卡片
+                        cardBGRoot = -1;
+                        return;
+                    }
+                    cardBGRoot = card.querySelector("div div");
+                    if(cardBGRoot == null){ //重試
+                        debugger;
+                        await delay(10);
+                        waitcardBGRoot();
+                        return;
+                    }
+                    else{ //有小卡片
+                        cardBGRoot.setAttribute('style',`height: 100%;max-width: 100%;`);
+                        let cardBG = card.querySelector("div div div");
+                        cardBG.setAttribute('style',`display: inline-block;position: relative;user-select: none;height: 48px;max-width: 288px;overflow: hidden;`);
+                        let cardnum = card.querySelector("div div div div");
+                        if(cardnum != null){
+                            cardnum.setAttribute('style',cardnum.getAttribute('style') +
+                            `position: absolute;right: 0;top: 0;height: 100%;font-size: 13px;line-height: 16px;transform: scale(.7);transform-origin: center center;
+                            display: flex;flex-direction: column;justify-content: center;align-items: flex-start;`);
+                        }
+                    }
                 }
+                waitcardBGRoot();
+
             }
             //评论文本
             let content = commentbody.querySelector("div[id='content']");
@@ -1039,28 +1057,6 @@
                     let bili_rich_links = contents.querySelectorAll("a");
                     if(bili_rich_links != null){
                         for(let bili_rich_link of bili_rich_links){
-                            //let x = '0.65em';
-                            //let y = '1.2em';
-                            /*let xy = bili_rich_link.getAttribute('style') //呃, 那个 icon 大小
-                            if(xy != null){
-                                xy = xy.split(";")
-                                for(let qwertyuiop of xy){
-                                    if(qwertyuiop.indexOf('--icon-width: ') != -1){
-                                        //console.log(qwertyuiop.substring(qwertyuiop.indexOf(":") + 1,qwertyuiop.length));
-                                        x = qwertyuiop.substring(qwertyuiop.indexOf(":") + 1,qwertyuiop.length);
-                                    }
-                                    else if(qwertyuiop.indexOf('--icon-height: ') != -1){
-                                        y = qwertyuiop.substring(qwertyuiop.indexOf(":") + 1,qwertyuiop.length);
-                                    }
-
-                                }
-                            }*/
-                            /*if(bili_rich_link.getAttribute('data-type') == 'link'){ //如果是视频连接的话, icon 大小应该是 1.2恶魔???
-                                x = y;
-                            }
-                            bili_rich_link.setAttribute('style',`display: inline-flex;flex-direction: row-reverse;--icon-width: ` + x + `;--icon-height: ` + y + `;color: var(--bili-rich-text-link-color);
-                            text-decoration: none;background-color: transparent;cursor: pointer;`);*/
-
                             bili_rich_link.setAttribute('style',bili_rich_link.getAttribute('style') + `;color: var(--bili-rich-text-link-color);
                             text-decoration: none;background-color: transparent;cursor: pointer;`);
                             async function fffff(){
@@ -1085,6 +1081,18 @@
                                     video.play();
                                 });
                             }
+                        }
+                    }
+
+                    //表情或者其他 <img> 標簽
+                    let imgs = contents.querySelectorAll("img");
+                    if(imgs.length > 0){
+                        for(let img of imgs){
+                            let imgstyle = '';
+                            if(img.getAttribute('style') != null){
+                                imgstyle = img.getAttribute('style');
+                            }
+                            img.setAttribute('style','display: inline-block;vertical-align: var(--bili-rich-text-icon-vertical-align);' + imgstyle);
                         }
                     }
                 }

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站個人主頁優化 (歸檔員自用)
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.15_2025-8-20
+// @version      v1.16_2025-9-12
 // @description  Bili 個人主頁優化.
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -379,7 +379,9 @@
     let hide_new_space_entry_status = false //隐藏 '体验新版' btn
     let output_page_div; //info 界面父节点
     let topbarsize = 20; //默认顶栏尺寸
-    addoutputpage();
+    if(window.location.href.split('/')[2] != 't.bilibili.com'){ //在動態首頁上禁用
+        addoutputpage();
+    }
     //modifyAlbums();
 
     //去除 @ 后面的
@@ -871,7 +873,9 @@
     //重复运行
     (async function autorun() {
         await modifyAlbums();
-        await addoutputpageitem();
+        if(window.location.href.split('/')[2] != 't.bilibili.com'){ //在動態首頁上禁用
+            await addoutputpageitem();
+        }
         await hide_new_space_entry(); //隐藏 "体验新版" btn
         setTimeout(autorun, 1000);
     })();

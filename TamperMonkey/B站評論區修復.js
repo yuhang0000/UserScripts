@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站評論區修復
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.16_2025-9-12
+// @version      v1.17_2025-10-8
 // @description  修复B站视频底下评论区 css 样式表。
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -18,7 +18,7 @@
 
     //总开关
     window.debug_comment = false;
-    window.debug_comment = true;
+    //window.debug_comment = true;
     //自动展开评论
     //window.biliautoclickreadmore = true;
     //笔记图片默认展示为原图
@@ -960,24 +960,27 @@
                 let fans = bili_comment_user_medal.shadowRoot.querySelector("div[id='fans']");
                 if(fans != null){
                     fans.setAttribute('style',fans.getAttribute('style') +
-                    `display: flex;align-items: center;height: 14px;padding-left: 5px;border-width: 0.5px;border-style: solid;border-radius: 10px;margin-left: 5px;`);
+                    `;display: flex;align-items: center;margin-left: 5px;`);
                     let icon = fans.querySelector("div[id='icon']"); //大航海的 icon
                     if(icon != null){
                         icon.setAttribute('style',icon.getAttribute('style') + `display: flex;align-items: center;position: relative;`);
                         let first_icon = fans.querySelector("img[id='first-icon']");
                         first_icon.setAttribute('style',`position: absolute;left: -8px;width: 20px;height: 20px;`);
                     }
-                    let name = fans.querySelector("div[id='name']");
-                    name.setAttribute('style',name.getAttribute('style') + `display: flex;justify-content: center;align-items: center;position: relative;height: 100%;margin-right: 4px;`);
-                    let name_text = fans.querySelector("div[id='name-text']");
-                    name_text.setAttribute('style',`position: absolute;top: 50%;left: 50%;font-weight: 500;white-space: nowrap;transform: scale(0.5) translate(-50%, -50%);transform-origin: 0px 0px;
-                    font-size: 18px;`);
-                    let level = fans.querySelector("div[id='level']");
-                    level.setAttribute('style',level.getAttribute('style') + `display: flex;align-items: center;justify-content: center;position: relative;width: 11.5px;height: 11.5px;
-                    border-radius: 50%;margin-right: 0.5px;`);
-                    let level_text = fans.querySelector("div[id='level-text']");
-                    level_text.setAttribute('style',`position: absolute;top: 52%;left: 50%;font-family: medalnum;font-weight: 500;white-space: nowrap;line-height: 1;
-                    transform: scale(0.5) translate(-50%, -43%);transform-origin: 0px 0px;`);
+                    let bili_fans_medal;
+                    async function waitbili_fans_medal(){
+                        bili_fans_medal = fans.querySelector("div.bili-fans-medal");
+                        if(bili_fans_medal == null){ //重試
+                            await delay(10);
+                            waitbili_fans_medal();
+                            return;
+                        }
+                        else{
+                            bili_fans_medal.setAttribute('style', bili_fans_medal.getAttribute('style') + ``);
+                        }
+                    }
+
+                    //waitbili_fans_medal();
                 }
             }
             let user_up = info.querySelector("div[id='user-up']"); //Up主标识
@@ -999,7 +1002,7 @@
                     }
                     cardBGRoot = card.querySelector("div div");
                     if(cardBGRoot == null){ //重試
-                        debugger;
+                        //debugger;
                         await delay(10);
                         waitcardBGRoot();
                         return;

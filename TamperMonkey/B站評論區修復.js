@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站評論區修復
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.17_2025-10-8
+// @version      v1.18_2025-10-16
 // @description  修复B站视频底下评论区 css 样式表。
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -1086,7 +1086,30 @@
                             }
                         }
                     }
-
+                    //<i>標簽, 一般是圖標
+                    function createicon(type){
+                        let img = document.createElement('img');
+                        img.setAttribute('loading','lazy');
+                        img.setAttribute('style','width:1.2em;height:1.2em;vertical-align:var(--icon-vertical-align);');
+                        switch(type){
+                            case 'BDC/video_circle_line/1':
+                                img.src = "https://i0.hdslb.com/bfs/activity-plat/static/20201110/4c8b2dbaded282e67c9a31daa4297c3c/AeQJlYP7e.png";
+                                break;
+                            case 'BDC/chain_link_line/1':
+                                img.src = "https://i0.hdslb.com/bfs/activity-plat/static/20221115/33208db4c24eef2890df876c57cc4123/FpFTK6bncr.png";
+                                break;
+                        }
+                        return img
+                    }
+                    let i_s = contents.querySelectorAll("i");
+                    if(i_s.length > 0){
+                        for(let t of i_s){
+                            if(t.classList.length < 1){
+                                continue;
+                            }
+                            t.replaceWith(createicon(t.classList[t.classList.length - 1]));
+                        }
+                    }
                     //表情或者其他 <img> 標簽
                     let imgs = contents.querySelectorAll("img");
                     if(imgs.length > 0){
@@ -1098,6 +1121,8 @@
                             img.setAttribute('style','display: inline-block;vertical-align: var(--bili-rich-text-icon-vertical-align);' + imgstyle);
                         }
                     }
+
+
                 }
                 else{
                     //console.log('先等等, 文本还是空白的');

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站評論區修復
 // @namespace    http://yuhang0000.github.io/
-// @version      v1.18_2025-10-16
+// @version      v1.19_2026-10-24
 // @description  修复B站视频底下评论区 css 样式表。
 // @author       欲行肆灵
 // @match        https://space.bilibili.com/*
@@ -508,15 +508,22 @@
                 let contents = bilicomment.shadowRoot.querySelector("div[id='contents']");
                 contents.setAttribute('style',`display: none;padding-top: 14px;position: relative;`);
                 let contents_end = bilicomment.shadowRoot.querySelector("div[id='end']"); //是否到底
-                let bottombar = contents_end.querySelector("div.bottombar");
-                if(contents_end.className == 'limit'){ //动态首页和个人主页, 这两个地方底部边距矮一点
-                    bottombar.setAttribute('style',`padding-bottom: 20px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
+                if(contents_end != null){ //这里, 刚加载界面, 直接显示已到达底部, 说明评论区已关闭
+                    let bottombar = contents_end.querySelector("div.bottombar");
+                    if(contents_end.className == 'limit'){ //动态首页和个人主页, 这两个地方底部边距矮一点
+                        bottombar.setAttribute('style',`padding-bottom: 20px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
+                    }
+                    else{
+                        bottombar.setAttribute('style',`padding-bottom: 100px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
+                    }
+                    console.log('当前评论区已关闭');
+                    return 'disable';
                 }
-                else{
-                    bottombar.setAttribute('style',`padding-bottom: 100px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
+                else{ //反之, 精选评论
+                    let sort_title = navbar.querySelector("div[id='sort-title']");
+                    sort_title.setAttribute('style',`font-weight: 500;color: var(--text1);`);
+                    console.log('当前评论区为精选评论');
                 }
-                console.log('当前评论区已关闭');
-                return 'disable';
             }
         }
         if(sort_div != null){ //两个排序按钮
@@ -1248,7 +1255,7 @@
             likebutton.addEventListener('mouseover', function() {
                 likebutton.style.color = "var(--brand_blue)";
             });
-            likebutton.addEventListener('mouseout', function() {
+            likebutton.addEventListener('mouseleave', function() {
                 likebutton.style.color = "var(--text3)";
             });
             dislikebutton.addEventListener('mouseover', function() {

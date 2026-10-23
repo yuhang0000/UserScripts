@@ -505,24 +505,26 @@
         if(sort_div == null){ //如果是null, 则说明评论区受限: 关闭&精选
             textboxdisable();
             if(commentisdisable == false){
-                let contents = bilicomment.shadowRoot.querySelector("div[id='contents']");
-                contents.setAttribute('style',`display: none;padding-top: 14px;position: relative;`);
-                let contents_end = bilicomment.shadowRoot.querySelector("div[id='end']"); //是否到底
-                if(contents_end != null){ //这里, 刚加载界面, 直接显示已到达底部, 说明评论区已关闭
-                    let bottombar = contents_end.querySelector("div.bottombar");
-                    if(contents_end.className == 'limit'){ //动态首页和个人主页, 这两个地方底部边距矮一点
-                        bottombar.setAttribute('style',`padding-bottom: 20px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
-                    }
-                    else{
-                        bottombar.setAttribute('style',`padding-bottom: 100px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
-                    }
-                    console.log('当前评论区已关闭');
-                    return 'disable';
-                }
-                else{ //反之, 精选评论
-                    let sort_title = navbar.querySelector("div[id='sort-title']");
+                let sort_title = navbar.querySelector("div[id='sort-title']");
+                if(sort_title != null){ //只有精选评论才会使用 sort-title
                     sort_title.setAttribute('style',`font-weight: 500;color: var(--text1);`);
                     console.log('当前评论区为精选评论');
+                }
+                else{
+                    let contents = bilicomment.shadowRoot.querySelector("div[id='contents']");
+                    contents.setAttribute('style',`display: none;padding-top: 14px;position: relative;`);
+                    let contents_end = bilicomment.shadowRoot.querySelector("div[id='end']"); //是否到底
+                    if(contents_end != null){ //这里, 刚加载界面, 直接显示已到达底部, 说明评论区已关闭
+                        let bottombar = contents_end.querySelector("div.bottombar");
+                        if(contents_end.className == 'limit'){ //动态首页和个人主页, 这两个地方底部边距矮一点
+                            bottombar.setAttribute('style',`padding-bottom: 20px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
+                        }
+                        else{
+                            bottombar.setAttribute('style',`padding-bottom: 100px;width: 100%;margin-top: 20px;font-size: 13px;color: var(--text3);text-align: center;user-select: none;`);
+                        }
+                        console.log('当前评论区已关闭');
+                        return 'disable';
+                    }
                 }
             }
         }
